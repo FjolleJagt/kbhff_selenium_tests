@@ -42,9 +42,8 @@ def create_dummy_user(cursor):
 def get_php_password_hash(plaintext_password):
     '''Generate hash of plaintext password in php, return the hash.
     Make sure "password_hash.php" contains the hashing algorithm used in the application.'''
-    print("Warning: password currently hardcoded")
     result = subprocess.run(
-            ["php", "password_hash.php"],
+            ["php", "password_hash.php", plaintext_password],
             stdout = subprocess.PIPE,
             check = True
             )
