@@ -38,6 +38,13 @@ def create_dummy_user(cursor):
             "verified, verification_code) VALUES (%s, %s, %s, %s, %s)", \
             (user_id, dummy_user_nickname, "email", "0", "12345678"))
 
+def delete_dummy_user(cursor):
+    user_id = get_dummy_userid(cursor)
+    if user_id is not None:
+        cursor.execute("DELETE FROM user_passwords WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM user_usernames WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+
 
 def get_php_password_hash(plaintext_password):
     '''Generate hash of plaintext password in php, return the hash.
@@ -73,19 +80,18 @@ def dummy_user():
     db_connection = mariadb.connect(user='kbhffdk', password='localpass', database='kbhff_dk')
     cursor = db_connection.cursor()
 
+    delete_dummy_user(cursor)
+    create_dummy_user(cursor)
     user_id = get_dummy_userid(cursor)
-    if user_id is None:
-        create_dummy_user(cursor)
-        user_id = get_dummy_userid(cursor)
-        assert user_id is not None
-        password_hash = get_password_hash_by_userid(user_id, cursor)
-        assert password_hash is not None
+    assert user_id is not None
+    password_hash = get_password_hash_by_userid(user_id, cursor)
+    assert password_hash is not None
 
     db_connection.commit()
 
 
 @pytest.fixture
-def firefox_driver(request):
+def firefox_driver(request, scope = 'function'):
     ''' choosing the driver should be a fixture '''
     raise NotImplementedError
 
@@ -123,11 +129,13 @@ def test_canLoginWithGoodCredentials(dummy_user):
     password_entry.send_keys(dummy_user_password)
     password_entry.submit()
 
-    #wait until redirected to verification code page, or 10 seconds, whichever is shorter
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//label[@for='input_verification_code']")))
+    import time
+    time.sleep(3)
+    #wait until redirected to new page, or 10 seconds, whichever is shorter
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
     source_to_check = driver.page_source
     driver.quit()
 
-    assert "forkert brugernavn eller password" not in source_to_check
+    assert "<title>Login</title>" not in source_to_check
 
