@@ -89,53 +89,64 @@ def dummy_user():
 
     db_connection.commit()
 
+    yield None #separates set-up from tear-down
+
+    delete_dummy_user(cursor)
+
 
 @pytest.fixture
-def firefox_driver(request, scope = 'function'):
+def driver_list(request, scope = 'function'):
     ''' choosing the driver should be a fixture '''
-    raise NotImplementedError
+    driverlist = [webdriver.Firefox, webdriver.Chrome]
+
+    def driver_generator():
+        for driver_constructor in driverlist:
+            driver = driver_constructor()
+            yield driver
+            driver.quit()
+
+    return driver_generator()
 
 
-@pytest.mark.skip(reason="disabled while writing other tests")
-def test_cantLoginWithBadCredentials():
+def test_cantLoginWithBadCredentials(driver_list):
     global dummy_user_nickname
-    driver = webdriver.Firefox()
-    driver.get(pages["login"])
+    for driver in driver_list:
+        driver.get(pages["login"])
 
-    username_entry = driver.find_element_by_id("input_username")
-    username_entry.send_keys("dont@email.me")
+        username_entry = driver.find_element_by_id("input_username")
+        username_entry.send_keys("dont@email.me")
 
-    password_entry = driver.find_element_by_id("input_password")
-    password_entry.send_keys("thatsnotmypassword")
-    password_entry.submit()
+        password_entry = driver.find_element_by_id("input_password")
+        password_entry.send_keys("thatsnotmypassword")
+        password_entry.submit()
 
-    #wait until the error message appears, or 10 seconds, whichever is shorter
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//p[@class='error']")))
+        #wait until the error message appears, or 10 seconds, whichever is shorter
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//p[@class='error']")))
 
-    assert "forkert brugernavn eller password" in driver.page_source
+        source_to_check = driver.page_source
+        driver.quit()
+        assert "forkert brugernavn eller password" in source_to_check
 
-    driver.quit()
 
-def test_canLoginWithGoodCredentials(dummy_user):
+def test_canLoginWithGoodCredentials(dummy_user, driver_list):
     global dummy_user_nickname
     global dummy_user_password
-    driver = webdriver.Firefox()
-    driver.get(pages["login"])
+    for driver in driver_list:
+        driver.get(pages["login"])
 
-    username_entry = driver.find_element_by_id("input_username")
-    username_entry.send_keys(dummy_user_nickname)
+        username_entry = driver.find_element_by_id("input_username")
+        username_entry.send_keys(dummy_user_nickname)
 
-    password_entry = driver.find_element_by_id("input_password")
-    password_entry.send_keys(dummy_user_password)
-    password_entry.submit()
+        password_entry = driver.find_element_by_id("input_password")
+        password_entry.send_keys(dummy_user_password)
+        password_entry.submit()
 
-    import time
-    time.sleep(3)
-    #wait until redirected to new page, or 10 seconds, whichever is shorter
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
+        import time
+        time.sleep(3)
+        #wait until redirected to new page, or 10 seconds, whichever is shorter
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
-    source_to_check = driver.page_source
-    driver.quit()
-
-    assert "<title>Login</title>" not in source_to_check
+        source_to_check = driver.page_source
+        driver.quit()
+        assert "<title>Login</title>" not in source_to_check
 
