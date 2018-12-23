@@ -96,7 +96,6 @@ def firefox_driver(request, scope = 'function'):
     raise NotImplementedError
 
 
-@pytest.mark.skip(reason="disabled while writing other tests")
 def test_cantLoginWithBadCredentials():
     global dummy_user_nickname
     driver = webdriver.Firefox()
