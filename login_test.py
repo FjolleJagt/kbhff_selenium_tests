@@ -89,6 +89,10 @@ def dummy_user():
 
     db_connection.commit()
 
+    yield None # separates setup from teardown
+
+    delete_dummy_user(cursor)
+
 
 @pytest.fixture
 def firefox_driver(request, scope = 'function'):
