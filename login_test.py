@@ -92,6 +92,7 @@ def dummy_user():
     yield None # separates setup from teardown
 
     delete_dummy_user(cursor)
+    db_connection.commit()
 
 
 @pytest.fixture
