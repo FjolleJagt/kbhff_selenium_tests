@@ -12,16 +12,14 @@ pages["login"] = pages["root"] + "login"
 
 dummy_user_firstname = "3141592653" # very unlikely to clash with an existing user
 dummy_user_password = "kbhff2357"
-dummy_user_nickname = "valid.dummy@email.com"
+dummy_user_email = "valid.dummy@email.com"
 
 def create_dummy_user(cursor):
-    global dummy_user_firstname
-    global dummy_user_password
-    global dummy_user_nickname #"nickname" field seems to store the email address
+    global dummy_user_firstname, dummy_user_password, dummy_user_email 
     #unassigned fields: id, created_at (autoassigned); modified_at, last_login_at (NULLed)
     developer_user_group = 3
     lastname = "Lastname"
-    nickname = dummy_user_nickname
+    nickname = dummy_user_email
     active_status = 1
     english = "EN"
     cursor.execute("INSERT IGNORE INTO users (user_group_id, firstname, lastname, " + \
@@ -36,7 +34,7 @@ def create_dummy_user(cursor):
 
     cursor.execute("INSERT IGNORE INTO user_usernames (user_id, username, type, " + \
             "verified, verification_code) VALUES (%s, %s, %s, %s, %s)", \
-            (user_id, dummy_user_nickname, "email", "0", "12345678"))
+            (user_id, dummy_user_email, "email", "0", "12345678"))
 
 def delete_dummy_user(cursor):
     user_id = get_dummy_userid(cursor)
@@ -56,6 +54,13 @@ def get_php_password_hash(plaintext_password):
             )
     return result.stdout.decode("UTF-8")
 
+def wait_for_redirect(driver):
+    previous_url = driver.current_url
+    def url_has_changed(driver):
+        return driver.current_url != previous_url
+    WebDriverWait(driver, 10).until(url_has_changed)
+
+
 def get_dummy_userid(cursor):
     global dummy_user_firstname
     cursor.execute("SELECT id FROM users WHERE firstname=%s", (dummy_user_firstname,))
@@ -74,7 +79,7 @@ def get_password_hash_by_userid(user_id, cursor):
 
 @pytest.fixture
 def dummy_user():
-    '''Create user with globl dummy_user name and password'''
+    '''Create user with global dummy_user name and password'''
     import mysql.connector as mariadb
 
     db_connection = mariadb.connect(user='kbhffdk', password='localpass', database='kbhff_dk')
@@ -102,7 +107,7 @@ def firefox_driver(request, scope = 'function'):
 
 
 def test_cantLoginWithBadCredentials():
-    global dummy_user_nickname
+    global dummy_user_email
     driver = webdriver.Firefox()
     driver.get(pages["login"])
 
@@ -116,26 +121,27 @@ def test_cantLoginWithBadCredentials():
     #wait until the error message appears, or 10 seconds, whichever is shorter
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//p[@class='error']")))
 
-    assert "forkert brugernavn eller password" in driver.page_source
-
+    source_to_check = driver.page_source
     driver.quit()
 
+    assert "forkert brugernavn eller password" in source_to_check
+
+
+
 def test_canLoginWithGoodCredentials(dummy_user):
-    global dummy_user_nickname
-    global dummy_user_password
+    global dummy_user_email, dummy_user_password
     driver = webdriver.Firefox()
     driver.get(pages["login"])
 
     username_entry = driver.find_element_by_id("input_username")
-    username_entry.send_keys(dummy_user_nickname)
+    username_entry.send_keys(dummy_user_email)
 
     password_entry = driver.find_element_by_id("input_password")
     password_entry.send_keys(dummy_user_password)
     password_entry.submit()
 
-    import time
-    time.sleep(3)
     #wait until redirected to new page, or 10 seconds, whichever is shorter
+    wait_for_redirect(driver)
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
     source_to_check = driver.page_source
