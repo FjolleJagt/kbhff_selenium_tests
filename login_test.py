@@ -62,14 +62,6 @@ def get_password_reset_token(cursor):
         reset_token = reset_token[0]
     return reset_token
 
-def wait_for_redirect(driver, previous_url=None):
-    if previous_url is None:
-        previous_url = driver.current_url
-    def url_has_changed(driver):
-        return driver.current_url != previous_url
-    WebDriverWait(driver, 10).until(url_has_changed)
-
-
 def get_dummy_userid(cursor):
     global dummy_user_firstname
     cursor.execute("SELECT id FROM users WHERE firstname=%s", (dummy_user_firstname,))
@@ -141,6 +133,8 @@ def login(driver, password):
 
     driver.get(pages["login"])
 
+    login_url = driver.current_url
+
     username_entry = driver.find_element_by_id("input_username")
     username_entry.send_keys(dummy_user_email)
 
@@ -148,8 +142,8 @@ def login(driver, password):
     password_entry.send_keys(password)
     password_entry.submit()
 
-    #wait until redirected to new page, or 10 seconds, whichever is shorter
-    wait_for_redirect(driver)
+    WebDriverWait(driver, 10).until(EC.url_changes(login_url))
+    # wait for page to load, up to ten seconds
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
     source_to_check = driver.page_source
@@ -172,7 +166,7 @@ def test_canResetPassword(dummy_user):
     forgot_password_link = driver.find_element_by_xpath("//p[@class='forgot']/a")
     forgot_password_link.click()
 
-    wait_for_redirect(driver, previous_url=pages["login"])
+    WebDriverWait(driver, 10).until(EC.url_changes(pages["login"]))
 
     email_entry = driver.find_element_by_id("input_username")
     email_entry.send_keys(dummy_user_email)
