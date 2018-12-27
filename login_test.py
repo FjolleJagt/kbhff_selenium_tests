@@ -56,7 +56,6 @@ def get_php_password_hash(plaintext_password):
 
 def get_password_reset_token(cursor):
     user_id = get_dummy_userid(cursor)
-    print(user_id)
     cursor.execute("SELECT token FROM user_password_reset_tokens WHERE user_id=%s", (user_id,))
     reset_token = cursor.fetchone()
     if reset_token is not None:
@@ -117,7 +116,6 @@ def firefox_driver(request, scope = 'function'):
     ''' choosing the driver should be a fixture '''
     raise NotImplementedError
 
-@pytest.mark.skip(reason="speed")
 def test_cantLoginWithBadCredentials():
     global dummy_user_email
     driver = webdriver.Firefox()
@@ -138,15 +136,9 @@ def test_cantLoginWithBadCredentials():
 
     assert "forkert brugernavn eller password" in source_to_check
 
+def login(driver, password):
+    global dummy_user_email
 
-@pytest.mark.skip(reason="speed")
-def test_canLoginWithGoodCredentials(dummy_user, password=None):
-    global dummy_user_email, dummy_user_password
-
-    if password is None:
-        password = dummy_user_password
-
-    driver = webdriver.Firefox()
     driver.get(pages["login"])
 
     username_entry = driver.find_element_by_id("input_username")
@@ -161,17 +153,18 @@ def test_canLoginWithGoodCredentials(dummy_user, password=None):
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
     source_to_check = driver.page_source
-    driver.quit()
 
     assert "<title>Login</title>" not in source_to_check
 
 
+def test_canLoginWithGoodCredentials(dummy_user, password=None):
+    global dummy_user_password
+    driver = webdriver.Firefox()
+    login(driver, dummy_user_password)
+    driver.quit()
+
+
 def test_canResetPassword(dummy_user):
-    #status: I can't actually get resetting my password to work manually
-    #when running the server locally... 1) it deletes all password reset tokens
-    #from the database before checking the token is valid 2) if you comment out
-    # that line, then when you enter new passwords it keeps looping back to the
-    #enter new passwords page.
     global dummy_user_email, dummy_user_password
     driver = webdriver.Firefox()
     driver.get(pages["login"])
@@ -193,7 +186,6 @@ def test_canResetPassword(dummy_user):
     db_connection = get_database_connection()
     cursor = db_connection.cursor()
     reset_token = get_password_reset_token(cursor)
-    print("Reset token", reset_token)
 
     reset_token_entry = driver.find_element_by_id("input_reset-token")
     reset_token_entry.send_keys(reset_token)
@@ -211,4 +203,5 @@ def test_canResetPassword(dummy_user):
 
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_username")))
 
-    test_canLoginWithGoodCredentials(dummy_user, new_password)
+    login(driver, new_password)
+    driver.quit()
