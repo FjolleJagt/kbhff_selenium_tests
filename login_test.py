@@ -15,7 +15,7 @@ dummy_user_password = "kbhff2357"
 dummy_user_email = "valid.dummy@email.com"
 
 def create_dummy_user(cursor):
-    global dummy_user_firstname, dummy_user_password, dummy_user_email 
+    global dummy_user_firstname, dummy_user_password, dummy_user_email
     #unassigned fields: id, created_at (autoassigned); modified_at, last_login_at (NULLed)
     developer_user_group = 3
     lastname = "Lastname"
@@ -54,6 +54,14 @@ def get_php_password_hash(plaintext_password):
             )
     return result.stdout.decode("UTF-8")
 
+def get_password_reset_token(cursor):
+    user_id = get_dummy_userid(cursor)
+    cursor.execute("SELECT token FROM user_password_reset_tokens WHERE user_id=%s", (user_id,))
+    reset_token = cursor.fetchone()
+    if reset_token is not None:
+        reset_token = reset_token[0]
+    return reset_token
+
 def get_dummy_userid(cursor):
     global dummy_user_firstname
     cursor.execute("SELECT id FROM users WHERE firstname=%s", (dummy_user_firstname,))
@@ -69,13 +77,16 @@ def get_password_hash_by_userid(user_id, cursor):
         password_hash = password_hash[0]
     return password_hash
 
+def get_database_connection():
+    import mysql.connector as mariadb
+
+    db_connection = mariadb.connect(user='kbhffdk', password='localpass', database='kbhff_dk')
+    return db_connection
 
 @pytest.fixture
 def dummy_user():
     '''Create user with global dummy_user name and password'''
-    import mysql.connector as mariadb
-
-    db_connection = mariadb.connect(user='kbhffdk', password='localpass', database='kbhff_dk')
+    db_connection = get_database_connection()
     cursor = db_connection.cursor()
 
     delete_dummy_user(cursor)
@@ -84,7 +95,6 @@ def dummy_user():
     assert user_id is not None
     password_hash = get_password_hash_by_userid(user_id, cursor)
     assert password_hash is not None
-
     db_connection.commit()
 
     yield None # separates setup from teardown
@@ -97,7 +107,6 @@ def dummy_user():
 def firefox_driver(request, scope = 'function'):
     ''' choosing the driver should be a fixture '''
     raise NotImplementedError
-
 
 def test_cantLoginWithBadCredentials():
     global dummy_user_email
@@ -119,11 +128,9 @@ def test_cantLoginWithBadCredentials():
 
     assert "forkert brugernavn eller password" in source_to_check
 
+def login(driver, password):
+    global dummy_user_email
 
-
-def test_canLoginWithGoodCredentials(dummy_user):
-    global dummy_user_email, dummy_user_password
-    driver = webdriver.Firefox()
     driver.get(pages["login"])
 
     login_url = driver.current_url
@@ -132,7 +139,7 @@ def test_canLoginWithGoodCredentials(dummy_user):
     username_entry.send_keys(dummy_user_email)
 
     password_entry = driver.find_element_by_id("input_password")
-    password_entry.send_keys(dummy_user_password)
+    password_entry.send_keys(password)
     password_entry.submit()
 
     WebDriverWait(driver, 10).until(EC.url_changes(login_url))
@@ -140,7 +147,55 @@ def test_canLoginWithGoodCredentials(dummy_user):
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
     source_to_check = driver.page_source
-    driver.quit()
 
     assert "<title>Login</title>" not in source_to_check
 
+
+def test_canLoginWithGoodCredentials(dummy_user, password=None):
+    global dummy_user_password
+    driver = webdriver.Firefox()
+    login(driver, dummy_user_password)
+    driver.quit()
+
+
+def test_canResetPassword(dummy_user):
+    global dummy_user_email, dummy_user_password
+    driver = webdriver.Firefox()
+    driver.get(pages["login"])
+
+    forgot_password_link = driver.find_element_by_xpath("//p[@class='forgot']/a")
+    forgot_password_link.click()
+
+    WebDriverWait(driver, 10).until(EC.url_changes(pages["login"]))
+
+    email_entry = driver.find_element_by_id("input_username")
+    email_entry.send_keys(dummy_user_email)
+    email_entry.submit()
+
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_reset-token")))
+
+    import time
+    time.sleep(0.5) # wait for token to be written to database
+
+    db_connection = get_database_connection()
+    cursor = db_connection.cursor()
+    reset_token = get_password_reset_token(cursor)
+
+    reset_token_entry = driver.find_element_by_id("input_reset-token")
+    reset_token_entry.send_keys(reset_token)
+    reset_token_entry.submit()
+
+    new_password = dummy_user_password + "butDifferent"
+
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_new_password")))
+    password_entry = driver.find_element_by_id("input_new_password")
+    password_entry.send_keys(new_password)
+
+    password_confirm = driver.find_element_by_id("input_confirm_password")
+    password_confirm.send_keys(new_password)
+    password_confirm.submit()
+
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_username")))
+
+    login(driver, new_password)
+    driver.quit()
