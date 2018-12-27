@@ -54,13 +54,6 @@ def get_php_password_hash(plaintext_password):
             )
     return result.stdout.decode("UTF-8")
 
-def wait_for_redirect(driver):
-    previous_url = driver.current_url
-    def url_has_changed(driver):
-        return driver.current_url != previous_url
-    WebDriverWait(driver, 10).until(url_has_changed)
-
-
 def get_dummy_userid(cursor):
     global dummy_user_firstname
     cursor.execute("SELECT id FROM users WHERE firstname=%s", (dummy_user_firstname,))
@@ -133,6 +126,8 @@ def test_canLoginWithGoodCredentials(dummy_user):
     driver = webdriver.Firefox()
     driver.get(pages["login"])
 
+    login_url = driver.current_url
+
     username_entry = driver.find_element_by_id("input_username")
     username_entry.send_keys(dummy_user_email)
 
@@ -140,8 +135,8 @@ def test_canLoginWithGoodCredentials(dummy_user):
     password_entry.send_keys(dummy_user_password)
     password_entry.submit()
 
-    #wait until redirected to new page, or 10 seconds, whichever is shorter
-    wait_for_redirect(driver)
+    WebDriverWait(driver, 10).until(EC.url_changes(login_url))
+    # wait for page to load, up to ten seconds
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
     source_to_check = driver.page_source
