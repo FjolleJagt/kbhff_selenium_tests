@@ -115,8 +115,9 @@ def try_login(driver, password):
     password_entry = driver.find_element_by_id("input_password")
     password_entry.send_keys(password)
     password_entry.submit()
-
-    WebDriverWait(driver, 10).until(EC.url_changes(login_url))
+    
+    import time
+    time.sleep(0.5) #wait for driver to start loading next page
     # wait for page to load, up to ten seconds
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
