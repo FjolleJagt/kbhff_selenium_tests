@@ -116,7 +116,7 @@ def test_cantLoginWithBadCredentials():
             #wait until the error message appears, or 10 seconds, whichever is shorter
             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//p[@class='error']")))
 
-            assert "forkert brugernavn eller password" in driver.page_source
+            assert "findes ikke" in driver.page_source
 
 
 def test_canLoginWithGoodCredentials(dummy_user):
@@ -131,8 +131,6 @@ def test_canLoginWithGoodCredentials(dummy_user):
 
             password_entry = driver.find_element_by_id("input_password")
             password_entry.send_keys(dummy_user_password)
-            import time
-            time.sleep(3)
             password_entry.submit()
 
             import time
