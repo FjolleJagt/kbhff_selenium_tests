@@ -12,16 +12,14 @@ pages["login"] = pages["root"] + "login"
 
 dummy_user_firstname = "3141592653" # very unlikely to clash with an existing user
 dummy_user_password = "kbhff2357"
-dummy_user_nickname = "valid.dummy@email.com"
+dummy_user_email = "valid.dummy@email.com"
 
 def create_dummy_user(cursor):
-    global dummy_user_firstname
-    global dummy_user_password
-    global dummy_user_nickname #"nickname" field seems to store the email address
+    global dummy_user_firstname, dummy_user_password, dummy_user_email
     #unassigned fields: id, created_at (autoassigned); modified_at, last_login_at (NULLed)
     developer_user_group = 3
     lastname = "Lastname"
-    nickname = dummy_user_nickname
+    nickname = dummy_user_email
     active_status = 1
     english = "EN"
     cursor.execute("INSERT IGNORE INTO users (user_group_id, firstname, lastname, " + \
@@ -36,7 +34,7 @@ def create_dummy_user(cursor):
 
     cursor.execute("INSERT IGNORE INTO user_usernames (user_id, username, type, " + \
             "verified, verification_code) VALUES (%s, %s, %s, %s, %s)", \
-            (user_id, dummy_user_nickname, "email", "0", "12345678"))
+            (user_id, dummy_user_email, "email", "0", "12345678"))
 
 def delete_dummy_user(cursor):
     user_id = get_dummy_userid(cursor)
@@ -56,6 +54,14 @@ def get_php_password_hash(plaintext_password):
             )
     return result.stdout.decode("UTF-8")
 
+def get_password_reset_token(cursor):
+    user_id = get_dummy_userid(cursor)
+    cursor.execute("SELECT token FROM user_password_reset_tokens WHERE user_id=%s", (user_id,))
+    reset_token = cursor.fetchone()
+    if reset_token is not None:
+        reset_token = reset_token[0]
+    return reset_token
+
 def get_dummy_userid(cursor):
     global dummy_user_firstname
     cursor.execute("SELECT id FROM users WHERE firstname=%s", (dummy_user_firstname,))
@@ -71,13 +77,16 @@ def get_password_hash_by_userid(user_id, cursor):
         password_hash = password_hash[0]
     return password_hash
 
-
-@pytest.fixture
-def dummy_user():
-    '''Create user with globl dummy_user name and password'''
+def get_database_connection():
     import mysql.connector as mariadb
 
     db_connection = mariadb.connect(user='kbhffdk', password='localpass', database='kbhff_dk')
+    return db_connection
+
+@pytest.fixture
+def dummy_user():
+    '''Create user with global dummy_user name and password'''
+    db_connection = get_database_connection()
     cursor = db_connection.cursor()
 
     delete_dummy_user(cursor)
@@ -86,7 +95,6 @@ def dummy_user():
     assert user_id is not None
     password_hash = get_password_hash_by_userid(user_id, cursor)
     assert password_hash is not None
-
     db_connection.commit()
 
     yield None # separates setup from teardown
@@ -94,49 +102,83 @@ def dummy_user():
     delete_dummy_user(cursor)
     db_connection.commit()
 
+def try_login(driver, password):
+    global dummy_user_email
+
+    driver.get(pages["login"])
+
+    login_url = driver.current_url
+
+    username_entry = driver.find_element_by_id("input_username")
+    username_entry.send_keys(dummy_user_email)
+
+    password_entry = driver.find_element_by_id("input_password")
+    password_entry.send_keys(password)
+    password_entry.submit()
+
+    WebDriverWait(driver, 10).until(EC.url_changes(login_url))
+    # wait for page to load, up to ten seconds
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
 def driver_constructor_generator():
     driverlist = [webdriver.Firefox, webdriver.Chrome]
     yield from driverlist
 
-
 def test_cantLoginWithBadCredentials():
-    global dummy_user_nickname
+    global dummy_user_email
     for driver_constructor in driver_constructor_generator():
         with driver_constructor() as driver:
-            driver.get(pages["login"])
-
-            username_entry = driver.find_element_by_id("input_username")
-            username_entry.send_keys("dont@email.me")
-
-            password_entry = driver.find_element_by_id("input_password")
-            password_entry.send_keys("thatsnotmypassword")
-            password_entry.submit()
-
-            #wait until the error message appears, or 10 seconds, whichever is shorter
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//p[@class='error']")))
-
+            try_login(driver, "thatsnotmypassword")
             assert "findes ikke" in driver.page_source
-
 
 def test_canLoginWithGoodCredentials(dummy_user):
     global dummy_user_nickname
     global dummy_user_password
     for driver_constructor in driver_constructor_generator():
         with driver_constructor() as driver:
-            driver.get(pages["login"])
-
-            username_entry = driver.find_element_by_id("input_username")
-            username_entry.send_keys(dummy_user_nickname)
-
-            password_entry = driver.find_element_by_id("input_password")
-            password_entry.send_keys(dummy_user_password)
-            password_entry.submit()
-
-            import time
-            time.sleep(3)
-            #wait until redirected to new page, or 10 seconds, whichever is shorter
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
-
+            try_login(driver, dummy_user_password)
             assert "<title>Login</title>" not in driver.page_source
 
+
+def test_canResetPassword(dummy_user):
+    global dummy_user_email, dummy_user_password
+    driver = webdriver.Firefox()
+    driver.get(pages["login"])
+
+    forgot_password_link = driver.find_element_by_xpath("//p[@class='forgot']/a")
+    forgot_password_link.click()
+
+    WebDriverWait(driver, 10).until(EC.url_changes(pages["login"]))
+
+    email_entry = driver.find_element_by_id("input_username")
+    email_entry.send_keys(dummy_user_email)
+    email_entry.submit()
+
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_reset-token")))
+
+    import time
+    time.sleep(0.5) # wait for token to be written to database
+
+    db_connection = get_database_connection()
+    cursor = db_connection.cursor()
+    reset_token = get_password_reset_token(cursor)
+
+    reset_token_entry = driver.find_element_by_id("input_reset-token")
+    reset_token_entry.send_keys(reset_token)
+    reset_token_entry.submit()
+
+    new_password = dummy_user_password + "butDifferent"
+
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_new_password")))
+    password_entry = driver.find_element_by_id("input_new_password")
+    password_entry.send_keys(new_password)
+
+    password_confirm = driver.find_element_by_id("input_confirm_password")
+    password_confirm.send_keys(new_password)
+    password_confirm.submit()
+
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_username")))
+
+    try_login(driver, new_password)
+    assert "<title>Login</title>" not in driver.page_source
+    driver.quit()
