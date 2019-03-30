@@ -14,8 +14,6 @@ dummy_user_firstname = "3141592653" # very unlikely to clash with an existing us
 dummy_user_password = "kbhff2357"
 dummy_user_email = "valid.dummy@email.com"
 
-database_ip = "172.19.0.3"
-
 def create_dummy_user(cursor):
     global dummy_user_firstname, dummy_user_password, dummy_user_email
     #unassigned fields: id, created_at (autoassigned); modified_at, last_login_at (NULLed)
@@ -82,8 +80,7 @@ def get_password_hash_by_userid(user_id, cursor):
 def get_database_connection():
     import mysql.connector as mariadb
 
-    global database_ip
-    db_connection = mariadb.connect(user='kbhffdk', password='localpass', database='kbhff_dk', host=database_ip)
+    db_connection = mariadb.connect(user='kbhffdk', password='localpass', database='kbhff_dk', port="54321")
     return db_connection
 
 @pytest.fixture
