@@ -19,8 +19,8 @@ if __name__ == "__main__":
     with webdriver.Firefox() as driver:
         user_data = {}
         user_data["email"] = "not@an.actual.mail.dlghh.dk"
-        user_data["firstname"] = "firstname"
-        user_data["lastname"] = "lastname"
+        user_data["firstname"] = "a new firstname"
+        user_data["lastname"] = "and a new lastname"
         user_data["password"] = "password"
         user_data["department"] = "Vesterbro"
         time.sleep(1)
