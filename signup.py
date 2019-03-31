@@ -13,7 +13,7 @@ def random_string(n):
 def random_user_data():
     import random
     user_data = {}
-    user_data["email"] = random_string(10) + "@kbhff.dk"
+    user_data["email"] = "cb.open.automail+" + random_string(10) + "@gmail.com"
     user_data["firstname"] = random_string(10)
     user_data["lastname"] = random_string(10)
     user_data["password"] = random_string(15)
@@ -64,6 +64,11 @@ if __name__ == "__main__":
     signup_skipping_verification_step(user_data)
     with webdriver.Firefox() as driver:
         try_login(driver, user_data["email"], user_data["password"])
+        time.sleep(5)
+        from check_email import *
+        mail = get_latest_mail_to(user_data["email"])
+        print(mail.title)
+        print(mail.body)
 
 
 
