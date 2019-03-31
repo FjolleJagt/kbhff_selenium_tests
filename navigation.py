@@ -3,6 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
 
 pages = {}
 pages["root"] = "http://kbhff.local/"
@@ -81,11 +82,11 @@ def fill_form_field(value, driver, form_id=None, class_name=None):
         form_id -- the id of the form input to fill
         class_name -- a CSS class of the form input to fill. If multiple form fields share the same class, then the first field that has the class is used.
 
-    It is compulsory to specify precisely one of id and className, otherwise the function will raise an InvalidArgumentsError"""
+    It is compulsory to specify precisely one of form_id and class_name, otherwise the function will raise an InvalidArgumentsError"""
     entry_field = find_form_field(driver, form_id=form_id, class_name = class_name)
     entry_field.send_keys(value)
 
-def get_form_field(driver, form_id=None, className=None):
+def get_form_field_value(driver, form_id=None, className=None):
     """Return the current value of a field in the first form that appears on the current page.
 
     Positional arguments:
@@ -99,6 +100,42 @@ def get_form_field(driver, form_id=None, className=None):
     field = find_form_field(driver, form_id=form_id, class_name = class_name)
     return field.getAttribute("value")
 
+def find_button(driver, button_id=None, class_name=None):
+    """Returns the first matching button on the current page.
+
+    Positional arguments:
+        driver -- the Selenium driver to use
+
+    Named arguments:
+        button_id -- the id of the button to be returned
+        class_name -- a CSS class of the form input to fill. If multiple form fields share the same class, then the first field that has the class is used.
+
+    It is compulsory to specify precisely one of button_id and class_name, otherwise the function will raise an InvalidArgumentsError"""
+    if (button_id == None and class_name == None) or (button_id != None and class_name != None):
+        raise InvalidArgumentError("Precisely one of button_id and class_name has to be specified.")
+    elif (button_id != None):
+        WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.ID, button_id)))
+        button = driver.find_element_by_id(button_id)
+    elif (class_name != None):
+        WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
+        button = driver.find_element_by_class_name(class_name)
+
+    if button.get_attribute("type") != "submit":
+        raise UnexpectedLayoutError(\
+                "Element with id {button_id} has unexpected type {element_type}.".format( \
+                button_id = button_id,
+                element_type = button.get_attribute("type"))
+                )
+        
+    return button
+
+def click_button(driver, button_id=None, class_name=None):
+    """Locates and clicks a button on the current page by id of class name.
+    Raises NoSuchElementError, if unable to find an element as specified
+    and UnexpectedLayoutError, if the element found is not a button."""
+    button = find_button(driver, button_id=button_id, class_name=class_name)
+    button.click()
+
 def submit_form(driver):
     """Click submit button on the current page.
 
@@ -106,9 +143,36 @@ def submit_form(driver):
         driver -- the Selenium driver to use
 
     The function will attempt to find a submit button to click; if unable to find one, it will raise an UnexpectedLayoutError."""
-    # This raises something like "NoSuchElementError" if unable to find one
-    submit_button = driver.find_element_by_class_name("button.primary.clickable")
-    submit_button.click()
+    # Might want to add other options thatn button.primary.clickable later
+    click_button(driver, class_name="button.primary.clickable")
+
+
+def select_from_dropdown(option_text, driver, dropdown_id):
+    """Attempts to find dropdown menu and select specified option.
+
+    Positional arguments:
+        driver -- the Selenium driver to use
+        dropdown_id -- the id of the dropdown menu
+        option_text -- the text of the dropdown item to be selected
+    """
+    dropdown_menu = Select(driver.find_element_by_id(dropdown_id))
+    dropdown_menu.select_by_visible_text(option_text)
+
+def check_checkbox(driver, box_id, should_end_up_selected = True):
+    """Interacts with a checkbox, will tick the box by default.
+
+    Positional arguments:
+        driver -- the Selenium driver to use
+        box_id -- the id of the checkbox
+    Optional arguments:
+        should_end_up_selected -- box will end up ticked if True, else uticked. Default True.
+    """
+    checkbox = driver.find_element_by_id(box_id)
+    if checkbox.get_attribute("type") != "checkbox":
+        raise UnexpectedLayoutError(f"The element with id {box_id} is not a checkbox.")
+    if checkbox.is_selected() != should_end_up_selected:
+        checkbox.click()
+
 
 def wait_for_next_page(driver):
     # wait for driver to start loading next page
