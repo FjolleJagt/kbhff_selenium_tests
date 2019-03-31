@@ -16,31 +16,38 @@ def signup_skipping_verification_step(user_data):
 
 
 if __name__ == "__main__":
+    import random, string
     with webdriver.Firefox() as driver:
         user_data = {}
-        user_data["email"] = "not@an.actual.mail.dlghh.dk"
-        user_data["firstname"] = "a new firstname"
-        user_data["lastname"] = "and a new lastname"
+        user_data["email"] = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5)) + "@kbhff.dk"
+        user_data["firstname"] = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+        user_data["lastname"] = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
         user_data["password"] = "password"
         user_data["department"] = "Vesterbro"
-        time.sleep(1)
+
+        dummy_card = {}
+        dummy_card["number"] = "4242 4242 4242 4242"
+        dummy_card["MM"] = "12"
+        dummy_card["YY"] = "20"
+        dummy_card["CVC"] = "123"
+
         navigate_to_page("signup", driver)
-        time.sleep(1)
         click_button(driver, class_name = "button.primary")
-        time.sleep(1)
         fill_form_field(user_data["firstname"], driver, form_id="input_firstname")
-        time.sleep(1)
         fill_form_field(user_data["lastname"], driver, form_id="input_lastname")
-        time.sleep(1)
         fill_form_field(user_data["email"], driver, form_id="input_email")
         fill_form_field(user_data["email"], driver, form_id="input_confirm_email")
-        time.sleep(1)
         fill_form_field(user_data["password"], driver, form_id="input_password")
-        time.sleep(1)
         select_from_dropdown(user_data["department"], driver, "input_department_id")
-        time.sleep(1)
         check_checkbox(driver, "input_terms")
-        time.sleep(1)
+        submit_form(driver)
+
+        click_button(driver, class_name = "skip") #skips verification step
+        
+        fill_form_field(dummy_card["number"], driver, form_id="input_card_number")
+        fill_form_field(dummy_card["MM"], driver, form_id="input_card_exp_month")
+        fill_form_field(dummy_card["YY"], driver, form_id="input_card_exp_year")
+        fill_form_field(dummy_card["CVC"], driver, form_id="input_card_cvc")
         submit_form(driver)
 
 
