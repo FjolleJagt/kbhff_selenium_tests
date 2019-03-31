@@ -62,8 +62,10 @@ def find_form_field(driver, form_id=None, class_name=None):
     if (form_id == None and class_name == None) or (form_id != None and class_name != None):
         raise InvalidArgumentError("Precisely one of form_id and class_name has to be specified.")
     elif (form_id != None):
+        WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.ID, form_id)))
         entry_field = driver.find_element_by_id(form_id)
     elif (class_name != None):
+        WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
         entry_field = driver.find_element_by_class_name(class_name)
 
     return entry_field
@@ -163,6 +165,7 @@ def enter_new_password_for_reset(driver, new_password):
 
 if __name__ == "__main__":
     with webdriver.Firefox() as driver:
+        # At this point, this user doesn't exist.
         username = "Hans@Hansen.notarealmail.dk"
         password = "Hansen"
         time.sleep(1)
