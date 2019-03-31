@@ -5,6 +5,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 
+from custom_exceptions import *
+
 pages = {}
 pages["root"] = "http://kbhff.local/"
 pages["root"] = "http://pre-launch.kbhff.dk/"
@@ -120,19 +122,11 @@ def find_button(driver, button_id=None, class_name=None):
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
         button = driver.find_element_by_class_name(class_name)
 
-    if button.get_attribute("type") != "submit":
-        raise UnexpectedLayoutError(\
-                "Element with id {button_id} has unexpected type {element_type}.".format( \
-                button_id = button_id,
-                element_type = button.get_attribute("type"))
-                )
-        
     return button
 
 def click_button(driver, button_id=None, class_name=None):
     """Locates and clicks a button on the current page by id of class name.
-    Raises NoSuchElementError, if unable to find an element as specified
-    and UnexpectedLayoutError, if the element found is not a button."""
+    Raises NoSuchElementError, if unable to find an element as specified."""
     button = find_button(driver, button_id=button_id, class_name=class_name)
     button.click()
 
