@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 
 pages = {}
 pages["root"] = "http://kbhff.local/"
-pages["root"] = "pre-launch.kbhff.dk/"
+pages["root"] = "http://pre-launch.kbhff.dk/"
 pages["login"] = pages["root"] + "login"
 pages["signup"] = pages["root"] + "bliv-medlem"
 
@@ -60,7 +60,7 @@ def find_form_field(driver, form_id=None, class_name=None):
 
     It is compulsory to specify precisely one of id and className, otherwise the function will raise an InvalidArgumentsError"""
     if (form_id == None and class_name == None) or (form_id != None and class_name != None):
-        raise InvalidArgumentError("Precisely one of form_id and class_name has to be specified".)
+        raise InvalidArgumentError("Precisely one of form_id and class_name has to be specified.")
     elif (form_id != None):
         entry_field = driver.find_element_by_id(form_id)
     elif (class_name != None):
@@ -105,26 +105,24 @@ def submit_form(driver):
 
     The function will attempt to find a submit button to click; if unable to find one, it will raise an UnexpectedLayoutError."""
     # This raises something like "NoSuchElementError" if unable to find one
-    submit_button = driver.find_element_by_id("submit")
+    submit_button = driver.find_element_by_class_name("button.primary.clickable")
     submit_button.click()
 
-
-def try_login(driver, username, password):
-    driver.get(pages["login"])
-
-    login_url = driver.current_url
-
-    username_entry = driver.find_element_by_id("input_username")
-    username_entry.send_keys(username)
-
-    password_entry = driver.find_element_by_id("input_password")
-    password_entry.send_keys(password)
-    password_entry.submit()
-    
+def wait_for_next_page(driver):
     # wait for driver to start loading next page
     time.sleep(0.5)
     # wait for page to load, up to ten seconds
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
+
+
+def try_login(driver, username, password):
+    navigate_to_page("login", driver)
+
+    fill_form_field(username, driver, "input_username")
+    fill_form_field(password, driver, "input_password")
+    submit_form(driver)
+
+    wait_for_next_page(driver)
 
 def request_password_reset(driver, user_email):
     driver.get(pages["login"])
@@ -163,3 +161,16 @@ def enter_new_password_for_reset(driver, new_password):
 
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_username")))
 
+if __name__ == "__main__":
+    with webdriver.Firefox() as driver:
+        username = "Hans@Hansen.notarealmail.dk"
+        password = "Hansen"
+        time.sleep(1)
+        navigate_to_page("login", driver)
+        time.sleep(1)
+        fill_form_field(username, driver, "input_username")
+        time.sleep(1)
+        fill_form_field(password, driver, "input_password")
+        time.sleep(1)
+        submit_form(driver)
+        time.sleep(10)
