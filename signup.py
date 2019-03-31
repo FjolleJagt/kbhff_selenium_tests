@@ -55,7 +55,7 @@ def signup_skipping_verification_step(user_data):
         fill_form_field(dummy_card["CVC"], driver, form_id="input_card_cvc")
         submit_form(driver)
         
-        time.sleep(5) # payment takes particularly long... need a better way to wait.
+        time.sleep(5) # payment takes particularly long... need a better way to wait
         wait_for_next_page(driver)
         assert("er godkendt" in driver.page_source) # signup and payment were successful
 
@@ -64,7 +64,6 @@ if __name__ == "__main__":
     signup_skipping_verification_step(user_data)
     with webdriver.Firefox() as driver:
         try_login(driver, user_data["email"], user_data["password"])
-        time.sleep(3)
 
 
 
