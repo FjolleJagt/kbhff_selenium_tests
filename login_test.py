@@ -80,7 +80,7 @@ def get_password_hash_by_userid(user_id, cursor):
 def get_database_connection():
     import mysql.connector as mariadb
 
-    db_connection = mariadb.connect(user='kbhffdk', password='localpass', database='kbhff_dk')
+    db_connection = mariadb.connect(user='kbhffdk', password='localpass', database='kbhff_dk', port="54321")
     return db_connection
 
 @pytest.fixture
@@ -102,33 +102,7 @@ def dummy_user():
     delete_dummy_user(cursor)
     db_connection.commit()
 
-
-@pytest.fixture
-def firefox_driver(request, scope = 'function'):
-    ''' choosing the driver should be a fixture '''
-    raise NotImplementedError
-
-def test_cantLoginWithBadCredentials():
-    global dummy_user_email
-    driver = webdriver.Firefox()
-    driver.get(pages["login"])
-
-    username_entry = driver.find_element_by_id("input_username")
-    username_entry.send_keys("dont@email.me")
-
-    password_entry = driver.find_element_by_id("input_password")
-    password_entry.send_keys("thatsnotmypassword")
-    password_entry.submit()
-
-    #wait until the error message appears, or 10 seconds, whichever is shorter
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//p[@class='error']")))
-
-    source_to_check = driver.page_source
-    driver.quit()
-
-    assert "forkert brugernavn eller password" in source_to_check
-
-def login(driver, password):
+def try_login(driver, password):
     global dummy_user_email
 
     driver.get(pages["login"])
@@ -141,21 +115,30 @@ def login(driver, password):
     password_entry = driver.find_element_by_id("input_password")
     password_entry.send_keys(password)
     password_entry.submit()
-
-    WebDriverWait(driver, 10).until(EC.url_changes(login_url))
+    
+    import time
+    time.sleep(0.5) #wait for driver to start loading next page
     # wait for page to load, up to ten seconds
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
-    source_to_check = driver.page_source
+def driver_constructor_generator():
+    driverlist = [webdriver.Firefox, webdriver.Chrome]
+    yield from driverlist
 
-    assert "<title>Login</title>" not in source_to_check
+def test_cantLoginWithBadCredentials():
+    global dummy_user_email
+    for driver_constructor in driver_constructor_generator():
+        with driver_constructor() as driver:
+            try_login(driver, "thatsnotmypassword")
+            assert "findes ikke" in driver.page_source
 
-
-def test_canLoginWithGoodCredentials(dummy_user, password=None):
+def test_canLoginWithGoodCredentials(dummy_user):
+    global dummy_user_nickname
     global dummy_user_password
-    driver = webdriver.Firefox()
-    login(driver, dummy_user_password)
-    driver.quit()
+    for driver_constructor in driver_constructor_generator():
+        with driver_constructor() as driver:
+            try_login(driver, dummy_user_password)
+            assert "<title>Login</title>" not in driver.page_source
 
 
 def test_canResetPassword(dummy_user):
@@ -197,5 +180,6 @@ def test_canResetPassword(dummy_user):
 
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_username")))
 
-    login(driver, new_password)
+    try_login(driver, new_password)
+    assert "<title>Login</title>" not in driver.page_source
     driver.quit()
