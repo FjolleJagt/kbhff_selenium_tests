@@ -29,6 +29,13 @@ def get_activation_code_from_email(email_body):
     assert len(code_matches) == 1
     return code_matches[0]
 
+def get_password_reset_token_from_email(email_body):
+    import re
+    code_pattern = re.compile('verificeringskode:\s{1,4}([a-z0-9]{10,50})\s{1,4}Bem')
+    code_matches = code_pattern.findall(email_body)
+    assert len(code_matches) == 1
+    return code_matches[0]
+
 if __name__ == "__main__":
     mail = get_latest_mail_to("cb.open.automail@gmail.com")
     print(mail.title)
