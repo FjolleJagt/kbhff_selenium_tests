@@ -15,7 +15,7 @@ def get_latest_mail_to(to_address):
 def get_activation_code_from_email(email_body):
     """ Parses body of the email sending an activation code and returns the code as string. """
     import re
-    # some random assumptions on what codes look like have veen made...
+    # some random assumptions on what codes look like have been made...
     # only lowercase letters or numbers
     # between 5 and 10 characters
     code_pattern_later = re.compile('ind i feltet:\s{1,4}([a-z0-9]{5,10})\s{1,4}Din konto vil blive')

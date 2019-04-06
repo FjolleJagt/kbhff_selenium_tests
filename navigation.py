@@ -17,17 +17,8 @@ def navigate_to_page(page_name, driver):
     """Navigate to the specified page.
 
     Positional arguments:
-        page_name -- a string corresponding to the desired page. Supported values are:
-            login
-            bekraeft_konto
-            opret_adgangskode
-            bekraeft_konto_receipt: /bliv-medlem/bekraeft/kvittering
-            signup
+        page_name -- a string corresponding to the desired page. See supported values in code.
         driver -- the Selenium driver to use
-    page names not yet implementer:
-        bekraeft_konto
-        opret_adgangskode
-        bekraeft_konto_receipt: /bliv-medlem/bekraeft/kvittering
     """
 
     if page_name in pages:
@@ -62,7 +53,7 @@ def find_form_field(driver, form_id=None, class_name=None):
         class_name -- a CSS class of the form input to fill. If multiple form fields share the same class, then the first field that has the class is used.
 
     It is compulsory to specify precisely one of id and className, otherwise the function will raise an InvalidArgumentsError"""
-    if (form_id == None and class_name == None) or (form_id != None and class_name != None):
+    if (form_id is None and class_name is None) or (form_id is not None and class_name is not None):
         raise InvalidArgumentError("Precisely one of form_id and class_name has to be specified.")
     elif (form_id != None):
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.ID, form_id)))
@@ -113,12 +104,12 @@ def find_button(driver, button_id=None, class_name=None):
         class_name -- a CSS class of the form input to fill. If multiple form fields share the same class, then the first field that has the class is used.
 
     It is compulsory to specify precisely one of button_id and class_name, otherwise the function will raise an InvalidArgumentsError"""
-    if (button_id == None and class_name == None) or (button_id != None and class_name != None):
+    if (button_id is None and class_name is None) or (button_id is not None and class_name is not None):
         raise InvalidArgumentError("Precisely one of button_id and class_name has to be specified.")
-    elif (button_id != None):
+    elif (button_id is not None):
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.ID, button_id)))
         button = driver.find_element_by_id(button_id)
-    elif (class_name != None):
+    elif (class_name is not None):
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
         button = driver.find_element_by_class_name(class_name)
 
@@ -137,7 +128,7 @@ def submit_form(driver):
         driver -- the Selenium driver to use
 
     The function will attempt to find a submit button to click; if unable to find one, it will raise an UnexpectedLayoutError."""
-    # Might want to add other options thatn button.primary.clickable later
+    # Might want to add other options than button.primary.clickable later
     click_button(driver, class_name="button.primary.clickable")
 
 
@@ -159,7 +150,7 @@ def check_checkbox(driver, box_id, should_end_up_selected = True):
         driver -- the Selenium driver to use
         box_id -- the id of the checkbox
     Optional arguments:
-        should_end_up_selected -- box will end up ticked if True, else uticked. Default True.
+        should_end_up_selected -- box will end up ticked if True, else unticked. Default True.
     """
     checkbox = driver.find_element_by_id(box_id)
     if checkbox.get_attribute("type") != "checkbox":
@@ -220,18 +211,3 @@ def enter_new_password_for_reset(driver, new_password):
     password_confirm.submit()
 
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_username")))
-
-if __name__ == "__main__":
-    with webdriver.Firefox() as driver:
-        # At this point, this user doesn't exist.
-        username = "Hans@Hansen.notarealmail.dk"
-        password = "Hansen"
-        time.sleep(1)
-        navigate_to_page("login", driver)
-        time.sleep(1)
-        fill_form_field(username, driver, "input_username")
-        time.sleep(1)
-        fill_form_field(password, driver, "input_password")
-        time.sleep(1)
-        submit_form(driver)
-        time.sleep(10)

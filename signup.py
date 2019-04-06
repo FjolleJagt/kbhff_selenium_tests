@@ -74,23 +74,3 @@ def signup_via_webform(user_data, activate_right_away=True):
             click_button(driver, class_name = "skip") #skips verification step
 
         _signup_step_betaling(driver)
-        
-
-if __name__ == "__main__":
-
-    user_data = random_user_data()
-    signup_via_webform(user_data)
-    with webdriver.Firefox() as driver:
-        try_login(driver, user_data["email"], user_data["password"])
-        time.sleep(10)
-
-    user_data = random_user_data()
-    signup_via_webform(user_data, activate_right_away=False)
-    with webdriver.Firefox() as driver:
-        try_login(driver, user_data["email"], user_data["password"])
-        time.sleep(5)
-        _signup_step_verification(user_data["email"], driver)
-        submit_form(driver)
-    with webdriver.Firefox() as driver:
-        try_login(driver, user_data["email"], user_data["password"])
-        time.sleep(10)
