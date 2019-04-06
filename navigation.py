@@ -12,6 +12,9 @@ pages["root"] = "http://kbhff.local/"
 pages["root"] = "http://pre-launch.kbhff.dk/"
 pages["login"] = pages["root"] + "login"
 pages["signup"] = pages["root"] + "bliv-medlem"
+pages["min_side"] = pages["root"] + "profil"
+pages["medlemshjaelp"] = pages["root"] + "medlemshjaelp"
+pages["medlemshjaelp-signup"] = pages["medlemshjaelp"] + "/tilmelding"
 
 def navigate_to_page(page_name, driver):
     """Navigate to the specified page.
@@ -41,6 +44,16 @@ def navigate_to_link(link, driver):
     time.sleep(0.5)
     # wait for page to load, up to ten seconds
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
+
+def assert_current_page_is(page_name, driver):
+    if page_name in pages:
+        assert driver.current_url == pages[page_name]
+    else:
+        raise NotImplementedError("{page_name} is not a known page name. \
+                Known page names are {known}".format(\
+                page_name = page_name,
+                known = ", ".join(pages.keys()))
+                )
 
 def find_form_field(driver, form_id=None, class_name=None):
     """Returns a field in the first form that appears on the current page.
