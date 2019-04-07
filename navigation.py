@@ -98,7 +98,7 @@ def get_form_field_value(driver, form_id=None, className=None):
     field = find_form_field(driver, form_id=form_id, class_name = class_name)
     return field.getAttribute("value")
 
-def find_button(driver, button_id=None, class_name=None):
+def find_button(driver, button_id=None, class_name=None, xpath=None):
     """Returns the first matching button on the current page.
 
     Positional arguments:
@@ -109,7 +109,7 @@ def find_button(driver, button_id=None, class_name=None):
         class_name -- a CSS class of the form input to fill. If multiple form fields share the same class, then the first field that has the class is used.
 
     It is compulsory to specify precisely one of button_id and class_name, otherwise the function will raise an InvalidArgumentsError"""
-    if (button_id is None and class_name is None) or (button_id is not None and class_name is not None):
+    if not ((button_id is not None) ^ (class_name is not None) ^ (xpath is not None)):
         raise InvalidArgumentError("Precisely one of button_id and class_name has to be specified.")
     elif (button_id is not None):
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.ID, button_id)))
@@ -117,13 +117,16 @@ def find_button(driver, button_id=None, class_name=None):
     elif (class_name is not None):
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
         button = driver.find_element_by_class_name(class_name)
+    elif (xpath is not None):
+        WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, xpath)))
+        button = driver.find_element_by_xpath(xpath)
 
     return button
 
-def click_button(driver, button_id=None, class_name=None):
+def click_button(driver, button_id=None, class_name=None, xpath=None):
     """Locates and clicks a button on the current page by id of class name.
     Raises NoSuchElementError, if unable to find an element as specified."""
-    button = find_button(driver, button_id=button_id, class_name=class_name)
+    button = find_button(driver, button_id=button_id, class_name=class_name, xpath=xpath)
     button.click()
 
 def submit_form(driver):
