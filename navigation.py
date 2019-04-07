@@ -106,11 +106,12 @@ def find_button(driver, button_id=None, class_name=None, xpath=None):
 
     Named arguments:
         button_id -- the id of the button to be returned
-        class_name -- a CSS class of the form input to fill. If multiple form fields share the same class, then the first field that has the class is used.
+        class_name -- a CSS class of the button to be returned. If multiple form fields share the same class, then the first field that has the class is used.
+        xpath -- XPath of the element to be returned.
 
     It is compulsory to specify precisely one of button_id and class_name, otherwise the function will raise an InvalidArgumentsError"""
     if not ((button_id is not None) ^ (class_name is not None) ^ (xpath is not None)):
-        raise InvalidArgumentError("Precisely one of button_id and class_name has to be specified.")
+        raise InvalidArgumentError("Precisely one of button_id, class_name, or xpath has to be specified.")
     elif (button_id is not None):
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.ID, button_id)))
         button = driver.find_element_by_id(button_id)
