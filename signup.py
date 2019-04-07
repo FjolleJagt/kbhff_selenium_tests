@@ -89,7 +89,7 @@ def signup_via_medlemshjaelp(vagt_user_data, signup_data, payment="mobilepay"):
         vagt_user_data -- a dictionary containing the following keys:
             "email",
             "password" -- used to log in as existing member on butiksvagt
-        payment (in ["mobilepay", "kontant", "skip"])
+        payment (in ["mobilepay", "cash", "skip"])
 
     This method uses its own selenium driver, so doesn't disturb the flow of the enclosing test"""
     with webdriver.Firefox() as driver:
@@ -112,27 +112,40 @@ def signup_via_medlemshjaelp(vagt_user_data, signup_data, payment="mobilepay"):
         if payment == "mobilepay":
             check_checkbox(driver, "input_confirm_mobilepay_payment")
             
-            mobilepay_submit_button = driver.find_element_by_xpath("/html/body/div/div[3]/div/div/form[1]/ul/li/input")
-            mobilepay_submit_button.click()
+            # mobilepay payment submit button
+            click_button(driver, xpath="/html/body/div/div[3]/div/div/form[1]/ul/li/input")
 
-        elif payment == "kontant":
-            kontant_tab = driver.find_element_by_xpath("/html/body/div/div[3]/div/div/h4[2]")
-            kontant_tab.click() # Display cash payment options
+        elif payment == "cash":
+            # Display cash payment options
+            click_button(driver, xpath="/html/body/div/div[3]/div/div/h4[2]")
 
             check_checkbox(driver, "input_confirm_cash_payment")
 
-            kontant_submit_button = driver.find_element_by_xpath("/html/body/div/div[3]/div/div/form[2]/ul/li[2]/input")
-            kontant_submit_button.click()
+            # cash payment submit button
+            click_button(driver, xpath="/html/body/div/div[3]/div/div/form[2]/ul/li[2]/input")
 
         elif payment == "skip":
-            kontant_tab = driver.find_element_by_xpath("/html/body/div/div[3]/div/div/h4[2]")
-            kontant_tab.click() # Display cash payment options
+            # Display cash payment options
+            click_button(driver, xpath="/html/body/div/div[3]/div/div/h4[2]")
 
-            click_button(driver, class_name="button.link") # "spring over" button
+            # "Spring over" button
+            click_button(driver, class_name="button.link")
 
         else:
-            raise NotImplementedError("Payment option must be one of [mobilepay, kontant, skip].")
+            raise NotImplementedError("Payment option must be one of [mobilepay, cash, skip].")
 
         wait_for_next_page(driver)
-        time.sleep(3)
         assert "medlemskab er oprettet" in driver.page_source.lower()
+        
+if __name__ == "__main__":
+    from dummy_user_data import user_data as vagt_data
+
+    user = random_user_data()
+    signup_via_medlemshjaelp(vagt_data, user, payment="mobilepay")
+
+    user = random_user_data()
+    signup_via_medlemshjaelp(vagt_data, user, payment="cash")
+
+    user = random_user_data()
+    signup_via_medlemshjaelp(vagt_data, user, payment="skip")
+
