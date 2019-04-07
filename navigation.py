@@ -176,6 +176,7 @@ def wait_for_next_page(driver):
 
 
 def try_login(driver, username, password):
+    """ Tries to log in with given credentials. """
     navigate_to_page("login", driver)
 
     fill_form_field(username, driver, "input_username")
@@ -183,6 +184,14 @@ def try_login(driver, username, password):
     submit_form(driver)
 
     wait_for_next_page(driver)
+
+def login(driver, username, password):
+    """ Like try_login but throws error if the user could not be logged in regularly."""
+    try_login(driver, username, password)
+    try:
+        assert_current_page_is("min_side", driver)
+    except AssertionError:
+        raise InvalidUserError(f"Could not log in with username {username} and password {password} and reach 'Min Side'. Make sure the user exists and is activated.")
 
 def request_password_reset(driver, user_email):
     driver.get(pages["login"])

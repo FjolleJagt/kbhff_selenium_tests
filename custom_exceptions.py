@@ -23,3 +23,6 @@ class PageNotImplementedError(KbhffApiError):
     def __str__(self):
         return self.message
 
+class InvalidUserError(KbhffApiError):
+    """ Raised when login did not go as expected."""
+    pass
