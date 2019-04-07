@@ -26,3 +26,12 @@ class PageNotImplementedError(KbhffApiError):
 class InvalidUserError(KbhffApiError):
     """ Raised when login did not go as expected."""
     pass
+
+
+class EndedUpOnWrongPageError(KbhffApiError):
+    """ Raised when current page of the driver is not as expected."""
+    pass
+
+class TextNotFoundOnPageError(KbhffApiError):
+    """ Raised when expected text is not shown on current page. """
+    pass

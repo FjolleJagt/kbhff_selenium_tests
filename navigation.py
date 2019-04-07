@@ -41,11 +41,39 @@ def navigate_to_link(link, driver):
     # wait for page to load, up to ten seconds
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
-def assert_current_page_is(page_name, driver):
-    if page_name in pages:
-        assert driver.current_url == pages[page_name]
-    else:
+def assert_current_page_is(page_name, driver, retry=0):
+    """ Assert that current url is as given.
+
+    Option arguments:
+        retry -- specifies how often to retry, with one second of delay between retries
+    """
+    if page_name not in pages:
         raise PageNotImplementedError(page_name, pages)
+
+    target_url = pages[page_name]
+    assert 0 <= retry
+    for i in range(retry):
+        if driver.current_url == target_url:
+            return
+        time.sleep(1)
+
+    if driver.current_url != target_url:
+        raise EndedUpOnWrongPageError(f"The current url {driver.current_url} does not match the expected url of page {page_name}")
+
+def assert_text_on_page(text, driver, retry=0):
+    """ Assert that given text shows up on page.
+
+    Option arguments:
+        retry -- specifies how often to retry, with one second of delay between retries
+    """
+    assert 0 <= retry
+    for i in range(retry):
+        if text in driver.page_source:
+            return
+        time.sleep(1)
+
+    if text not in driver.page_source:
+        raise TextNotFoundOnPageError(f"Text {text} was not found on current page {driver.current_url}")
 
 def find_form_field(driver, form_id=None, class_name=None):
     """Returns a field in the first form that appears on the current page.
@@ -190,7 +218,7 @@ def login(driver, username, password):
     try_login(driver, username, password)
     try:
         assert_current_page_is("min_side", driver)
-    except AssertionError:
+    except EndedUpOnWrongPageError:
         raise InvalidUserError(f"Could not log in with username {username} and password {password} and reach 'Min Side'. Make sure the user exists and is activated.")
 
 def request_password_reset(driver, user_email):
