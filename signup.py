@@ -136,16 +136,3 @@ def signup_via_medlemshjaelp(vagt_user_data, signup_data, payment="mobilepay"):
 
         wait_for_next_page(driver)
         assert "medlemskab er oprettet" in driver.page_source.lower()
-        
-if __name__ == "__main__":
-    from dummy_user_data import user_data as vagt_data
-
-    user = random_user_data()
-    signup_via_medlemshjaelp(vagt_data, user, payment="mobilepay")
-
-    user = random_user_data()
-    signup_via_medlemshjaelp(vagt_data, user, payment="cash")
-
-    user = random_user_data()
-    signup_via_medlemshjaelp(vagt_data, user, payment="skip")
-
