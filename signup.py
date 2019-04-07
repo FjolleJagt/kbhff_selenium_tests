@@ -108,12 +108,31 @@ def signup_via_medlemshjaelp(vagt_user_data, signup_data, payment="mobilepay"):
         submit_form(driver)
 
         wait_for_next_page(driver)
-
+        
         if payment == "mobilepay":
             check_checkbox(driver, "input_confirm_mobilepay_payment")
+            
+            mobilepay_submit_button = driver.find_element_by_xpath("/html/body/div/div[3]/div/div/form[1]/ul/li/input")
+            mobilepay_submit_button.click()
+
+        elif payment == "kontant":
+            kontant_tab = driver.find_element_by_xpath("/html/body/div/div[3]/div/div/h4[2]")
+            kontant_tab.click() # Display cash payment options
+
+            check_checkbox(driver, "input_confirm_cash_payment")
+
+            kontant_submit_button = driver.find_element_by_xpath("/html/body/div/div[3]/div/div/form[2]/ul/li[2]/input")
+            kontant_submit_button.click()
+
+        elif payment == "skip":
+            kontant_tab = driver.find_element_by_xpath("/html/body/div/div[3]/div/div/h4[2]")
+            kontant_tab.click() # Display cash payment options
+
+            click_button(driver, class_name="button.link") # "spring over" button
+
         else:
-            raise NotImplementedError("Payment option must be one of [mobilepay].")
-        submit_form(driver)
+            raise NotImplementedError("Payment option must be one of [mobilepay, kontant, skip].")
 
         wait_for_next_page(driver)
+        time.sleep(3)
         assert "medlemskab er oprettet" in driver.page_source.lower()
