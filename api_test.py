@@ -43,13 +43,18 @@ def mock_driver_for_retries():
 def mock_driver_for_retries():
     class MockDriver:
         def __init__(self):
-            self.current_url = "Mock_current_url"
-            self.call_number = 0
+            self.call_number_source = 0
+            self.call_number_url = 0
 
         @property
         def page_source(self):
-            self.call_number += 1
-            return f"This is page_source call number {self.call_number}."
+            self.call_number_source += 1
+            return f"This is page_source call number {self.call_number_source}."
+
+        @property
+        def current_url(self):
+            self.call_number_url += 1
+            return f"This is current_url call number {self.call_number_url}."
 
     driver = MockDriver()
     return driver
