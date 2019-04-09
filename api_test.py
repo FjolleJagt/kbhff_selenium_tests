@@ -9,5 +9,5 @@ def driver(request):
     driver.close()
 
 def test_cannotNavigateToGibberishPage(driver):
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(PageNotImplementedError):
         navigate_to_page("gibberishPage", driver)
