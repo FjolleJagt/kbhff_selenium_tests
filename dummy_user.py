@@ -3,7 +3,7 @@ import pytest
 
 dummy_user_firstname = "3141592653" # very unlikely to clash with an existing user
 dummy_user_password = "kbhff2357"
-dummy_user_email = "valid.dummy@email.com"
+dummy_user_email = "cb.open.automail+dummyUserKBHFF@gmail.com"
 
 def create_dummy_user(cursor):
     global dummy_user_firstname, dummy_user_password, dummy_user_email
