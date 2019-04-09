@@ -2,7 +2,12 @@ import pytest
 
 from navigation import *
 
-def test_cannotNavigateToGibberishPage():
+@pytest.fixture(scope="module", params = [webdriver.Firefox, webdriver.Chrome] )
+def driver(request):
+    driver = (request.param)()
+    yield driver # separates setup from teardown
+    driver.close()
+
+def test_cannotNavigateToGibberishPage(driver):
     with pytest.raises(NotImplementedError):
-        with webdriver.Firefox() as driver:
-            navigate_to_page("gibberishPage", driver)
+        navigate_to_page("gibberishPage", driver)
