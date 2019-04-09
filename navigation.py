@@ -12,6 +12,9 @@ pages["root"] = "http://kbhff.local/"
 pages["root"] = "http://pre-launch.kbhff.dk/"
 pages["login"] = pages["root"] + "login"
 pages["signup"] = pages["root"] + "bliv-medlem"
+pages["min_side"] = pages["root"] + "profil"
+pages["medlemshjaelp"] = pages["root"] + "medlemshjaelp"
+pages["medlemshjaelp-signup"] = pages["medlemshjaelp"] + "/tilmelding"
 
 def navigate_to_page(page_name, driver):
     """Navigate to the specified page.
@@ -28,11 +31,7 @@ def navigate_to_page(page_name, driver):
         # wait for page to load, up to ten seconds
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
     else:
-        raise NotImplementedError("{page_name} is not a known page name. \
-                Known page names are {known}".format(\
-                page_name = page_name,
-                known = ", ".join(pages.keys()))
-                )
+        raise PageNotImplementedError(page_name, pages)
 
 def navigate_to_link(link, driver):
     """Navigates to specified URL."""
@@ -41,6 +40,40 @@ def navigate_to_link(link, driver):
     time.sleep(0.5)
     # wait for page to load, up to ten seconds
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
+
+def assert_current_page_is(page_name, driver, retry=0):
+    """ Assert that current url is as given.
+
+    Option arguments:
+        retry -- specifies how often to retry, with one second of delay between retries
+    """
+    if page_name not in pages:
+        raise PageNotImplementedError(page_name, pages)
+
+    target_url = pages[page_name]
+    assert 0 <= retry
+    for i in range(retry):
+        if driver.current_url == target_url:
+            return
+        time.sleep(1)
+
+    if driver.current_url != target_url:
+        raise EndedUpOnWrongPageError(f"The current url {driver.current_url} does not match the expected url of page {page_name}")
+
+def assert_text_on_page(text, driver, retry=0):
+    """ Assert that given text shows up on page.
+
+    Option arguments:
+        retry -- specifies how often to retry, with one second of delay between retries
+    """
+    assert 0 <= retry
+    for i in range(retry):
+        if text in driver.page_source:
+            return
+        time.sleep(1)
+
+    if text not in driver.page_source:
+        raise TextNotFoundOnPageError(f"Text {text} was not found on current page {driver.current_url}")
 
 def find_form_field(driver, form_id=None, class_name=None):
     """Returns a field in the first form that appears on the current page.
@@ -93,7 +126,7 @@ def get_form_field_value(driver, form_id=None, className=None):
     field = find_form_field(driver, form_id=form_id, class_name = class_name)
     return field.getAttribute("value")
 
-def find_button(driver, button_id=None, class_name=None):
+def find_button(driver, button_id=None, class_name=None, xpath=None):
     """Returns the first matching button on the current page.
 
     Positional arguments:
@@ -101,24 +134,28 @@ def find_button(driver, button_id=None, class_name=None):
 
     Named arguments:
         button_id -- the id of the button to be returned
-        class_name -- a CSS class of the form input to fill. If multiple form fields share the same class, then the first field that has the class is used.
+        class_name -- a CSS class of the button to be returned. If multiple form fields share the same class, then the first field that has the class is used.
+        xpath -- XPath of the element to be returned.
 
     It is compulsory to specify precisely one of button_id and class_name, otherwise the function will raise an InvalidArgumentsError"""
-    if (button_id is None and class_name is None) or (button_id is not None and class_name is not None):
-        raise InvalidArgumentError("Precisely one of button_id and class_name has to be specified.")
+    if not ((button_id is not None) ^ (class_name is not None) ^ (xpath is not None)):
+        raise InvalidArgumentError("Precisely one of button_id, class_name, or xpath has to be specified.")
     elif (button_id is not None):
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.ID, button_id)))
         button = driver.find_element_by_id(button_id)
     elif (class_name is not None):
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
         button = driver.find_element_by_class_name(class_name)
+    elif (xpath is not None):
+        WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, xpath)))
+        button = driver.find_element_by_xpath(xpath)
 
     return button
 
-def click_button(driver, button_id=None, class_name=None):
+def click_button(driver, button_id=None, class_name=None, xpath=None):
     """Locates and clicks a button on the current page by id of class name.
     Raises NoSuchElementError, if unable to find an element as specified."""
-    button = find_button(driver, button_id=button_id, class_name=class_name)
+    button = find_button(driver, button_id=button_id, class_name=class_name, xpath=xpath)
     button.click()
 
 def submit_form(driver):
@@ -167,6 +204,7 @@ def wait_for_next_page(driver):
 
 
 def try_login(driver, username, password):
+    """ Tries to log in with given credentials. """
     navigate_to_page("login", driver)
 
     fill_form_field(username, driver, "input_username")
@@ -174,3 +212,11 @@ def try_login(driver, username, password):
     submit_form(driver)
 
     wait_for_next_page(driver)
+
+def login(driver, username, password):
+    """ Like try_login but throws error if the user could not be logged in regularly."""
+    try_login(driver, username, password)
+    try:
+        assert_current_page_is("min_side", driver)
+    except EndedUpOnWrongPageError:
+        raise InvalidUserError(f"Could not log in with username {username} and password {password} and reach 'Min Side'. Make sure the user exists and is activated.")
