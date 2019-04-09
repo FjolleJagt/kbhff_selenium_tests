@@ -39,6 +39,21 @@ def mock_driver_for_retries():
     driver = MockDriver()
     return driver
 
+@pytest.fixture(scope="function")
+def mock_driver_for_retries():
+    class MockDriver:
+        def __init__(self):
+            self.current_url = "Mock_current_url"
+            self.call_number = 0
+
+        @property
+        def page_source(self):
+            self.call_number += 1
+            return f"This is page_source call number {self.call_number}."
+
+    driver = MockDriver()
+    return driver
+
 def test_cannotNavigateToGibberishPage(driver):
     with pytest.raises(PageNotImplementedError):
         navigate_to_page("gibberishPage", driver)
