@@ -130,7 +130,7 @@ def fill_form_field(value, driver, form_id=None, class_name=None):
     entry_field = find_form_field(driver, form_id=form_id, class_name = class_name)
     entry_field.send_keys(value)
 
-def get_form_field_value(driver, form_id=None, className=None):
+def get_form_field_value(driver, form_id=None, class_name=None):
     """Return the current value of a field in the first form that appears on the current page.
 
     Positional arguments:
@@ -142,7 +142,7 @@ def get_form_field_value(driver, form_id=None, className=None):
 
     It is compulsory to specify precisely one of form_id and className, otherwise the function will raise an InvalidArgumentsError"""
     field = find_form_field(driver, form_id=form_id, class_name = class_name)
-    return field.getAttribute("value")
+    return field.get_attribute("value")
 
 def find_button(driver, button_id=None, class_name=None, xpath=None):
     """Returns the first matching button on the current page.
