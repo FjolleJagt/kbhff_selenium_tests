@@ -6,7 +6,7 @@ class InvalidArgumentError(KbhffApiError):
     """Raised when the passed arguments are invalid."""
     pass
 
-class UnexpectedLayoutError(Exception):
+class UnexpectedLayoutError(KbhffApiError):
     """Raised when assumptions on the layout of the current page are not met."""
     pass
 
