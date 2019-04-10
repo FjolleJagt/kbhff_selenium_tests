@@ -1,12 +1,23 @@
 import pytest
 
 from navigation import *
+from pyvirtualdisplay import Display
 
 @pytest.fixture(scope="function", params = [webdriver.Firefox, webdriver.Chrome] )
 def driver(request):
+    display = Display(visible=0, size=(1920,1080))
+    display.start()
     driver = (request.param)()
     yield driver # separates setup from teardown
     driver.close()
+    display.stop()
+
+@pytest.fixture(scope="function")
+def mock_driver():
+    class MockDriver:
+        pass
+
+    return MockDriver()
 
 @pytest.fixture(scope="function")
 def mock_driver_for_retries():
@@ -68,3 +79,21 @@ def test_canFillAndReadFormField(driver):
     fill_form_field(input_string, driver, form_id="input_username")
     read_string = get_form_field_value(driver, form_id="input_username")
     assert input_string == read_string
+
+def test_findButtonDoesNotAllowMultipleParmeters(mock_driver):
+    with pytest.raises(InvalidArgumentError):
+        find_button(mock_driver, button_id="id", class_name="class")
+    with pytest.raises(InvalidArgumentError):
+        find_button(mock_driver, button_id="id", xpath="xpath")
+    with pytest.raises(InvalidArgumentError):
+        find_button(mock_driver, button_id="id", class_name="class", xpath="xpath")
+
+def test_findButtonFindsLoginButtonWithDefaultArguments(driver):
+    navigate_to_page("login", driver)
+    button = find_button(driver)
+    assert button is not None
+
+def test_findButtonFindsLoginButtonByXpath(driver):
+    navigate_to_page("login", driver)
+    button = find_button(driver, xpath="/html/body/div/div[3]/div/form/ul/li/input")
+    assert button is not None
