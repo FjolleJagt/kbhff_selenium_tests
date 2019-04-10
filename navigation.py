@@ -4,6 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
+from selenium.common.exceptions import TimeoutException
 
 from custom_exceptions import *
 
@@ -137,9 +138,10 @@ def find_button(driver, button_id=None, class_name=None, xpath=None):
         class_name -- a CSS class of the button to be returned. If multiple form fields share the same class, then the first field that has the class is used.
         xpath -- XPath of the element to be returned.
 
-    It is compulsory to specify precisely one of button_id and class_name, otherwise the function will raise an InvalidArgumentsError"""
-    if not ((button_id is not None) ^ (class_name is not None) ^ (xpath is not None)):
-        raise InvalidArgumentError("Precisely one of button_id, class_name, or xpath has to be specified.")
+    It is compulsory to specify at most one of button_id and class_name, otherwise the function will raise an InvalidArgumentsError.
+    If none was specified, the first element whose class contains 'button' is returned."""
+    if len([x for x in [button_id, class_name, xpath] if x is not None]) > 1:
+        raise InvalidArgumentError("At most one of button_id, class_name, or xpath may be specified.")
     elif (button_id is not None):
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.ID, button_id)))
         button = driver.find_element_by_id(button_id)
@@ -149,12 +151,15 @@ def find_button(driver, button_id=None, class_name=None, xpath=None):
     elif (xpath is not None):
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, xpath)))
         button = driver.find_element_by_xpath(xpath)
+    else:
+        return find_button(driver, xpath="//input[contains(@class, 'button')]")
+
 
     return button
 
 def click_button(driver, button_id=None, class_name=None, xpath=None):
     """Locates and clicks a button on the current page by id of class name.
-    Raises NoSuchElementError, if unable to find an element as specified."""
+    Raises TimeoutException, if unable to find an element as specified."""
     button = find_button(driver, button_id=button_id, class_name=class_name, xpath=xpath)
     button.click()
 
@@ -166,7 +171,10 @@ def submit_form(driver):
 
     The function will attempt to find a submit button to click; if unable to find one, it will raise an UnexpectedLayoutError."""
     # Might want to add other options than button.primary.clickable later
-    click_button(driver, class_name="button.primary.clickable")
+    try:
+        click_button(driver, xpath="//input[@type = 'submit'][contains(@class, 'button')]")
+    except TimeoutException:
+        raise UnexpectedLayoutError("Could not find a submit button")
 
 
 def select_from_dropdown(option_text, driver, dropdown_id):
