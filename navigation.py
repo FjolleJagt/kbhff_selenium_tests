@@ -155,6 +155,7 @@ def find_button(driver, button_id=None, class_name=None, xpath=None):
         class_name -- a CSS class of the button to be returned. If multiple form fields share the same class, then the first field that has the class is used.
         xpath -- XPath of the element to be returned.
 
+    It is compulsory to specify at most one of button_id and class_name, otherwise the function will raise an InvalidArgumentError.
     If none was specified, the first element whose class contains 'button' is returned."""
     if len([x for x in [button_id, class_name, xpath] if x is not None]) > 1:
         raise InvalidArgumentError("At most one of button_id, class_name, or xpath may be specified.")
