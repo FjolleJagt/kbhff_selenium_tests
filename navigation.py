@@ -16,6 +16,7 @@ pages["signup"] = pages["root"] + "bliv-medlem"
 pages["min_side"] = pages["root"] + "profil"
 pages["medlemshjaelp"] = pages["root"] + "medlemshjaelp"
 pages["medlemshjaelp-signup"] = pages["medlemshjaelp"] + "/tilmelding"
+pages["bekraeft_konto"] = pages["login"] + "/bekraeft-konto"
 
 def navigate_to_page(page_name, driver):
     """Navigate to the specified page.
@@ -59,7 +60,7 @@ def assert_current_page_is(page_name, driver, retry=0):
         time.sleep(1)
 
     if driver.current_url != target_url:
-        raise EndedUpOnWrongPageError(f"The current url {driver.current_url} does not match the expected url of page {page_name}")
+        raise EndedUpOnWrongPageError(f"The current url {driver.current_url} does not match the expected url of page {page_name} which is {pages[page_name]}")
 
 def assert_text_on_page(text, driver, retry=0):
     """ Assert that given text shows up on page.
