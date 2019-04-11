@@ -18,15 +18,16 @@ def get_activation_code_from_email(email_body):
     # some random assumptions on what codes look like have been made...
     # only lowercase letters or numbers
     # between 5 and 10 characters
-    code_pattern_later = re.compile('ind i feltet:\s{1,4}([a-z0-9]{5,10})\s{1,4}Din konto vil blive')
+    code_pattern_later = re.compile('ind i feltet:[ \r\n]{1,4}([a-z0-9]{5,10})[ \r\n]{1,4}Din konto vil blive')
     code_matches_later = code_pattern_later.findall(email_body)
     
-    code_pattern_during_signup = re.compile('aktivere din konto:\s{1,4}([a-z0-9]{5,10})\s{1,4}Alternativt kan du klikke')
+    code_pattern_during_signup = re.compile('aktivere din konto:[ \r\n]{1,4}([a-z0-9]{5,10})[ \r\n]{1,4}Alternativt kan du klikke')
     code_matches_during_signup = code_pattern_during_signup.findall(email_body)
     
     code_matches = code_matches_later + code_matches_during_signup
 
-    assert len(code_matches) == 1
+    if len(code_matches) != 1:
+        raise UnexpectedLayoutError(f"Could not find a unique activation code in the following mail body:\n {email_body}")
     return code_matches[0]
 
 def get_password_reset_code_from_email(email_body):
