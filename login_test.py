@@ -2,6 +2,7 @@ import pytest
 from fixtures import *
 
 from navigation import *
+from check_email import *
 
 import time
 
@@ -13,8 +14,8 @@ def test_unverifiedUserFirstLogin(driver, unverified_user_via_medlemshjaelp):
     try_login(driver, user["email"], user["password"])
     assert_current_page_is("bekraeft_konto", driver)
 
-    mail = get_latest_mail_to(user["email"])
-    assert "Aktiver din konto" in mail.title
+    time.sleep(2) # wait for email to be sent
+    mail = get_latest_mail_to(user["email"], expect_title="Aktiver din konto hos KBHFF", retry=5)
     token = get_activation_code_from_email(mail.body)
     fill_form_field(token, driver, form_id="input_verification_code")
     submit_form(driver)

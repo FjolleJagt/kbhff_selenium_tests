@@ -1,14 +1,25 @@
 import easyimap, email
 from mail_credentials import *
 from custom_exceptions import *
+import time
 
-def get_latest_mail_to(to_address):
-    gmail = easyimap.connect('imap.gmail.com', mail_credentials["login"], \
-            mail_credentials["password"])
-    for mail_id in gmail.listids():
-        mail = gmail.mail(mail_id)
-        if mail.to == to_address:
-            return mail
+def get_latest_mail_to(to_address, expect_title=None, retry=0):
+    """ Receive latest email sent to to_address.
+
+    Optional parameters:
+        expect_title --- if set, emails with titles that aren't an exact match will be ignored
+        retry --- retry this many times with a second of delay each
+    """
+    assert retry >= 0
+
+    for i in range(0,1+retry):
+        gmail = easyimap.connect('imap.gmail.com', mail_credentials["login"], \
+                mail_credentials["password"])
+        for mail_id in gmail.listids():
+            mail = gmail.mail(mail_id)
+            if mail.to == to_address and (expect_title in [mail.title, None]):
+                return mail
+        time.sleep(1)
 
     raise NoEmailReceivedError(f"Found no Email to {to_address}.")
 
