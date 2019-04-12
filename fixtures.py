@@ -21,6 +21,6 @@ def unverified_user_via_medlemshjaelp():
     user_data = random_user_data()
     signup_via_medlemshjaelp(permanent_user, user_data)
     yield user_data
-    #delete_user(user_data)
+    delete_user(user_data)
 
 
