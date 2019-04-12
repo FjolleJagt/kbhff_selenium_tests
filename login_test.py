@@ -21,13 +21,14 @@ def test_unverifiedUserFirstLogin(driver, unverified_user_via_medlemshjaelp):
     submit_form(driver)
     assert_current_page_is("opret_password", driver)
 
-#    fill_form_field(user["password"], driver, form_id="input_password")
-#    fill_form_field(user["password"], driver, form_id="input_confirm_password")
-#    assert_current_page_is("kvittering", driver)
+    fill_form_field(user["password"], driver, form_id="input_new_password")
+    fill_form_field(user["password"], driver, form_id="input_confirm_password")
+    submit_form(driver)
+    assert_current_page_is("kvittering", driver)
 
-#    click_link("login")
-#    assert_current_page_is("login", driver)
-#    assert get_form_field_value(driver, form_id="input_FIELD") == user["email"]
+    navigate_to_page("login", driver)
+    assert_current_page_is("login", driver)
+    assert get_form_field_value(driver, form_id="input_username") == user["email"]
 
 
 
