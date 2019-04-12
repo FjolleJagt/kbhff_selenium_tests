@@ -20,7 +20,7 @@ pages["bekraeft_konto"] = pages["login"] + "/bekraeft-konto"
 pages["opret_password"] = pages["login"] + "/opret-password"
 pages["kvittering"] = pages["signup"] + "/bekraeft/kvittering"
 
-def navigate_to_page(page_name, driver):
+def navigate_to_page(page_name, driver, new_tab=False):
     """Navigate to the specified page.
 
     Positional arguments:
@@ -29,9 +29,10 @@ def navigate_to_page(page_name, driver):
     """
 
     if page_name in pages:
-        driver.get(pages[page_name])
-        # wait for driver to start loading next page
-        time.sleep(0.5)
+        if new_tab:
+            driver.execute_script(f"window.open('{pages[page_name]}')")
+        else:
+            driver.get(pages[page_name])
         # wait for page to load, up to ten seconds
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
     else:
