@@ -20,4 +20,4 @@ def delete_user(user_data):
         
         wait_for_next_page(driver)
         assert_current_page_is("login", driver, retry=10)
-        assert_text_on_page("Dine oplysninger blev slettet", driver)
+        assert_text_on_page("Dine oplysninger blev slettet", driver, retry=10)
