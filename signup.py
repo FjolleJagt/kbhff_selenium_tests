@@ -113,20 +113,20 @@ def signup_via_medlemshjaelp(vagt_user_data, signup_data, payment="mobilepay"):
             check_checkbox(driver, "input_confirm_mobilepay_payment")
             
             # mobilepay payment submit button
-            click_button(driver, xpath="/html/body/div/div[3]/div/div/form[1]/ul/li/input")
+            click_button(driver, xpath="//form[@class='mobilepay']/ul/li/input")
 
         elif payment == "cash":
             # Display cash payment options
-            click_button(driver, xpath="/html/body/div/div[3]/div/div/h4[2]")
+            click_button(driver, xpath="//*[@class='tab cash_tab']")
 
             check_checkbox(driver, "input_confirm_cash_payment")
 
             # cash payment submit button
-            click_button(driver, xpath="/html/body/div/div[3]/div/div/form[2]/ul/li[2]/input")
+            click_button(driver, xpath="//form[@class='cash']/ul/li[@class='pay']/input")
 
         elif payment == "skip":
             # Display cash payment options
-            click_button(driver, xpath="/html/body/div/div[3]/div/div/h4[2]")
+            click_button(driver, xpath="//*[@class='tab cash_tab']")
 
             # "Spring over" button
             click_button(driver, class_name="button.link")
