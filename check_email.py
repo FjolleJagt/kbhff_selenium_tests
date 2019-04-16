@@ -28,9 +28,3 @@ def get_activation_code_from_email(email_body):
 
     assert len(code_matches) == 1
     return code_matches[0]
-
-def get_password_reset_code_from_email(email_body):
-    """ Parses body of the email sending a password reset code and returns the code as string. """
-    import re
-    print(email_body)
-    return "mock code"

@@ -59,28 +59,28 @@ def mock_driver_for_retries():
     driver = MockDriver()
     return driver
 
-class NavigateTests:
-    def test_cannotNavigateToGibberishPage(driver):
+class Test_Navigation:
+    def test_cannotNavigateToGibberishPage(self, driver):
         with pytest.raises(PageNotImplementedError):
             navigate_to_page("gibberishPage", driver)
 
-    def test_canNavigateToLogin(driver):
+    def test_canNavigateToLogin(self, driver):
         navigate_to_page("login", driver)
         assert_text_on_page("Velkommen indenfor", driver, retry=3)
 
-class AssertTests:
-    def test_assertTextRetriesIfNeeded(mock_driver_for_retries):
+class Test_AssertionsAboutCurrentPage:
+    def test_assertTextRetriesIfNeeded(self, mock_driver_for_retries):
         mock_driver = mock_driver_for_retries
         with pytest.raises(TextNotFoundOnPageError):
             assert_text_on_page("call number 5.", mock_driver, retry=3)
         assert "call number 5." in mock_driver.page_source
 
-    def test_assertTextDoesNotRetryIfUnnecessary(mock_driver_for_retries):
+    def test_assertTextDoesNotRetryIfUnnecessary(self, mock_driver_for_retries):
         mock_driver = mock_driver_for_retries
         assert_text_on_page("call number 1.", mock_driver, retry=5)
         assert "call number 2." in mock_driver.page_source
 
-    def test_assertCurrentPageRetriesIfNeeded(mock_driver_for_retries):
+    def test_assertCurrentPageRetriesIfNeeded(self, mock_driver_for_retries):
         mock_driver = mock_driver_for_retries
         global pages
         pages["call 5"] = "This is current_url call number 5."
@@ -88,7 +88,7 @@ class AssertTests:
             assert_current_page_is("call 5", mock_driver, retry=3)
         assert "call number 6." in mock_driver.current_url #account for one more call in error message
 
-    def test_assertCurrentPageDoesNotRetryIfUnnecessary(mock_driver_for_retries):
+    def test_assertCurrentPageDoesNotRetryIfUnnecessary(self, mock_driver_for_retries):
         mock_driver = mock_driver_for_retries
         global pages
         pages["call 1"] = "This is current_url call number 1."
@@ -102,8 +102,8 @@ def test_canFillAndReadFormField(driver):
     read_string = get_form_field_value(driver, form_id="input_username")
     assert input_string == read_string
 
-class FindButtonTests
-    def test_findButtonDoesNotAllowMultipleParmeters(mock_driver):
+class Test_FindButtons:
+    def test_findButtonDoesNotAllowMultipleParmeters(self, mock_driver):
         with pytest.raises(InvalidArgumentError):
             find_button(mock_driver, button_id="id", class_name="class")
         with pytest.raises(InvalidArgumentError):
@@ -111,12 +111,12 @@ class FindButtonTests
         with pytest.raises(InvalidArgumentError):
             find_button(mock_driver, button_id="id", class_name="class", xpath="xpath")
 
-    def test_findButtonFindsLoginButtonWithDefaultArguments(driver):
+    def test_findButtonFindsLoginButtonWithDefaultArguments(self, driver):
         navigate_to_page("login", driver)
         button = find_button(driver)
         assert button is not None
 
-    def test_findButtonFindsLoginButtonByXpath(driver):
+    def test_findButtonFindsLoginButtonByXpath(self, driver):
         navigate_to_page("login", driver)
         button = find_button(driver, xpath="/html/body/div/div[3]/div/form/ul/li/input")
         assert button is not None
