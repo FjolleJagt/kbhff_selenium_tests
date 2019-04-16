@@ -113,7 +113,7 @@ def signup_via_medlemshjaelp(vagt_user_data, signup_data, payment="mobilepay"):
             check_checkbox(driver, "input_confirm_mobilepay_payment")
             
             # mobilepay payment submit button
-            click_button(driver, xpath="//form[@class='mobilepay']/ul/li/input")
+            click_button(driver, xpath="//form[@class='mobilepay']/descendant::input[contains(@class, 'button')]")
 
         elif payment == "cash":
             # Display cash payment options
@@ -122,7 +122,7 @@ def signup_via_medlemshjaelp(vagt_user_data, signup_data, payment="mobilepay"):
             check_checkbox(driver, "input_confirm_cash_payment")
 
             # cash payment submit button
-            click_button(driver, xpath="//form[@class='cash']/ul/li[@class='pay']/input")
+            click_button(driver, xpath="//form[@class='cash']/descendant::input[contains(@class, 'button')]")
 
         elif payment == "skip":
             # Display cash payment options
