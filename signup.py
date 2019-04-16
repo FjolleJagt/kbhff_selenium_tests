@@ -19,6 +19,7 @@ def random_user_data():
     user_data["lastname"] = random_string(10)
     user_data["password"] = random_string(15)
     user_data["department"] = random.choice(["Vesterbro", "Amager"])
+    user_data["membershiptype"] = random.choice(["Frivillig", "Støttemedlem"])
 
     return user_data 
 
@@ -74,3 +75,64 @@ def signup_via_webform(user_data, activate_right_away=True):
             click_button(driver, class_name = "skip") #skips verification step
 
         _signup_step_betaling(driver)
+
+def signup_via_medlemshjaelp(vagt_user_data, signup_data, payment="mobilepay"):
+    """Log in as a Butiksvagt and creates a user with the requested email address using the medlemshjælp page.
+
+    Positional arguments:
+        signup_data -- a dictionary containing the following keys: 
+            "firstname", 
+            "lastname",
+            "email",
+            "membershiptype" (in ["Frivillig", "Støttemedlem"])
+            "department" (in ["Vesterbro", "Amager"])
+        vagt_user_data -- a dictionary containing the following keys:
+            "email",
+            "password" -- used to log in as existing member on butiksvagt
+        payment (in ["mobilepay", "cash", "skip"])
+
+    This method uses its own selenium driver, so doesn't disturb the flow of the enclosing test"""
+    with webdriver.Firefox() as driver:
+        try_login(driver, vagt_user_data["email"], vagt_user_data["password"])
+        assert_current_page_is("min_side", driver)
+        navigate_to_page("medlemshjaelp-signup", driver)
+        assert_current_page_is("medlemshjaelp-signup", driver)
+        
+        fill_form_field(signup_data["firstname"], driver, form_id="input_firstname")
+        fill_form_field(signup_data["lastname"], driver, form_id="input_lastname")
+        fill_form_field(signup_data["email"], driver, form_id="input_email")
+        fill_form_field(signup_data["email"], driver, form_id="input_confirm_email")
+        select_from_dropdown(signup_data["membershiptype"], driver, "input_item_id")
+        select_from_dropdown(signup_data["department"], driver, "input_department_id")
+        check_checkbox(driver, "input_terms")
+        submit_form(driver)
+
+        wait_for_next_page(driver)
+        
+        if payment == "mobilepay":
+            check_checkbox(driver, "input_confirm_mobilepay_payment")
+            
+            # mobilepay payment submit button
+            click_button(driver, xpath="//form[@class='mobilepay']/descendant::input[contains(@class, 'button')]")
+
+        elif payment == "cash":
+            # Display cash payment options
+            click_button(driver, xpath="//*[@class='tab cash_tab']")
+
+            check_checkbox(driver, "input_confirm_cash_payment")
+
+            # cash payment submit button
+            click_button(driver, xpath="//form[@class='cash']/descendant::input[contains(@class, 'button')]")
+
+        elif payment == "skip":
+            # Display cash payment options
+            click_button(driver, xpath="//*[@class='tab cash_tab']")
+
+            # "Spring over" button
+            click_button(driver, class_name="button.link")
+
+        else:
+            raise NotImplementedError("Payment option must be one of [mobilepay, cash, skip].")
+
+        wait_for_next_page(driver)
+        assert "medlemskab er oprettet" in driver.page_source.lower()
