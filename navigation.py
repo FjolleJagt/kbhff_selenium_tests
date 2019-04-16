@@ -42,11 +42,56 @@ def navigate_to_link(link, driver):
     # wait for page to load, up to ten seconds
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
-def assert_current_page_is(page_name, driver):
-    if page_name in pages:
-        assert driver.current_url == pages[page_name]
-    else:
+def waitUntil(retryCount, condition, error):
+    """ Evaluates the function passed in condition and returns without throwing an error if true.
+    Else retries with a second of delay for at most retryCount many times.
+    If none of the retries leads to a positive evaluation of the condition, the passed error is thrown.
+
+    Arguments:
+        retryCount -- specifies how many times to retry, with one second of delay between retries
+        condition -- a function returning True or False to be evaluated. True will cause waitUntil to return
+        error -- an exception to be thrown if all retries lead to False evaluations of condition
+    """
+    for i in range(retryCount):
+        if condition():
+            return
+        time.sleep(1)
+
+    if not condition():
+        raise error
+    
+
+def assert_current_page_is(page_name, driver, retryCount=0):
+    """ Assert that current url matches the string given in page_name exactly.
+
+    Optional arguments:
+        retryCount -- specifies how many times to retry, with one second of delay between retries
+    """
+    if page_name not in pages:
         raise PageNotImplementedError(page_name, pages)
+
+    def current_page_is_correct():
+        return driver.current_url == pages[page_name]
+
+    waitUntil(retryCount, \
+            current_page_is_correct, \
+            UnexpectedPageError(f"The current url {driver.current_url} does not match the expected url of page {page_name}")
+            )
+
+def assert_text_on_page(text, driver, retryCount=0):
+    """ Assert that the given text shows up on the current page.
+
+    Optional arguments:
+        retryCount -- specifies how many times to retry, with one second of delay between retries
+    """
+
+    def text_is_on_page():
+        return text in driver.page_source
+
+    waitUntil(retryCount, \
+            text_is_on_page, \
+            TextNotFoundOnPageError(f"Text {text} was not found on current page {driver.current_url}")
+            )
 
 def find_form_field(driver, form_id=None, class_name=None):
     """Returns a field in the first form that appears on the current page.
@@ -184,6 +229,7 @@ def wait_for_next_page(driver):
 
 
 def try_login(driver, username, password):
+    """ Tries to log in with the given credentials. If this fails, no error is thrown and the function returns."""
     navigate_to_page("login", driver)
 
     fill_form_field(username, driver, "input_username")
@@ -191,6 +237,14 @@ def try_login(driver, username, password):
     submit_form(driver)
 
     wait_for_next_page(driver)
+
+def login(driver, username, password):
+    """ Tries to log in with the given credentials. If this fails, an InvalidUserError is thrown."""
+    try_login(driver, username, password)
+    try:
+        assert_current_page_is("min_side", driver)
+    except UnexpectedPageError:
+        raise InvalidUserError(f"Could not log in with username {username} and password {password} and reach 'Min Side'. Make sure the user exists and is activated.")
 
 def request_password_reset(driver, user_email):
     driver.get(pages["login"])

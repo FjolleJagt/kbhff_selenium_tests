@@ -43,9 +43,8 @@ def _signup_step_betaling(driver):
         fill_form_field(dummy_card["CVC"], driver, form_id="input_card_cvc")
         submit_form(driver)
         
-        time.sleep(5) # payment takes particularly long... need a better way to wait
         wait_for_next_page(driver)
-        assert("er godkendt" in driver.page_source) # signup and payment were successful
+        assert_text_on_page("er godkendt", driver, retryCount=10)
 
 def _signup_step_verification(email, driver):
         mail = get_latest_mail_to(email)

@@ -23,3 +23,15 @@ class PageNotImplementedError(KbhffApiError):
     def __str__(self):
         return self.message
 
+class InvalidUserError(KbhffApiError):
+    """ Raised when login did not go as expected."""
+    pass
+
+
+class UnexpectedPageError(KbhffApiError):
+    """ Raised when current page of the driver is not as expected."""
+    pass
+
+class TextNotFoundOnPageError(KbhffApiError):
+    """ Raised when expected text is not shown on current page. """
+    pass
