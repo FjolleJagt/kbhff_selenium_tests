@@ -44,7 +44,7 @@ def _signup_step_betaling(driver):
         submit_form(driver)
         
         wait_for_next_page(driver)
-        assert_text_on_page("er godkendt", driver, retry=10)
+        assert_text_on_page("er godkendt", driver, retryCount=10)
 
 def _signup_step_verification(email, driver):
         mail = get_latest_mail_to(email)
