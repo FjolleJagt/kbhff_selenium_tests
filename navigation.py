@@ -20,7 +20,7 @@ pages["bekraeft_konto"] = pages["login"] + "/bekraeft-konto"
 pages["opret_password"] = pages["login"] + "/opret-password"
 pages["kvittering"] = pages["signup"] + "/bekraeft/kvittering"
 
-def navigate_to_page(page_name, driver):
+def navigate_to_page(page_name, driver, new_tab=False):
     """Navigate to the specified page.
 
     Positional arguments:
@@ -29,11 +29,17 @@ def navigate_to_page(page_name, driver):
     """
 
     if page_name in pages:
-        driver.get(pages[page_name])
-        # wait for driver to start loading next page
-        time.sleep(0.5)
-        # wait for page to load, up to ten seconds
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
+        if new_tab:
+            old_window_handles = driver.window_handles
+            driver.execute_script(f"window.open('{pages[page_name]}')")
+            WebDriverWait(driver, 10).until(EC.number_of_windows_to_be(len(old_window_handles)+1))
+            new_window_handles = [x for x in driver.window_handles if x not in old_window_handles]
+        else:
+            driver.get(pages[page_name])
+            new_window_handles = [driver.current_window_handle]
+        assert_current_page_is(page_name, driver, retryCount = 3)
+        assert len(new_window_handles) == 1
+        return new_window_handles[0]
     else:
         raise PageNotImplementedError(page_name, pages)
 
