@@ -28,7 +28,7 @@ class InvalidUserError(KbhffApiError):
     pass
 
 
-class EndedUpOnWrongPageError(KbhffApiError):
+class UnexpectedPageError(KbhffApiError):
     """ Raised when current page of the driver is not as expected."""
     pass
 

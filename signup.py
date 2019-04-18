@@ -44,7 +44,7 @@ def _signup_step_betaling(driver):
         submit_form(driver)
         
         wait_for_next_page(driver)
-        assert_text_on_page("er godkendt", driver, retry=10)
+        assert_text_on_page("er godkendt", driver, retryCount=10)
 
 def _signup_step_verification(email, driver):
         mail = get_latest_mail_to(email)
@@ -92,8 +92,7 @@ def signup_via_medlemshjaelp(vagt_user_data, signup_data, payment="mobilepay"):
 
     This method uses its own selenium driver, so doesn't disturb the flow of the enclosing test"""
     with webdriver.Firefox() as driver:
-        try_login(driver, vagt_user_data["email"], vagt_user_data["password"])
-        assert_current_page_is("min_side", driver)
+        login(driver, vagt_user_data["email"], vagt_user_data["password"])
         navigate_to_page("medlemshjaelp-signup", driver)
         assert_current_page_is("medlemshjaelp-signup", driver)
         
@@ -112,20 +111,20 @@ def signup_via_medlemshjaelp(vagt_user_data, signup_data, payment="mobilepay"):
             check_checkbox(driver, "input_confirm_mobilepay_payment")
             
             # mobilepay payment submit button
-            click_button(driver, xpath="/html/body/div/div[3]/div/div/form[1]/ul/li/input")
+            click_button(driver, xpath="//form[@class='mobilepay']/descendant::input[contains(@class, 'button')]")
 
         elif payment == "cash":
             # Display cash payment options
-            click_button(driver, xpath="/html/body/div/div[3]/div/div/h4[2]")
+            click_button(driver, xpath="//*[@class='tab cash_tab']")
 
             check_checkbox(driver, "input_confirm_cash_payment")
 
             # cash payment submit button
-            click_button(driver, xpath="/html/body/div/div[3]/div/div/form[2]/ul/li[2]/input")
+            click_button(driver, xpath="//form[@class='cash']/descendant::input[contains(@class, 'button')]")
 
         elif payment == "skip":
             # Display cash payment options
-            click_button(driver, xpath="/html/body/div/div[3]/div/div/h4[2]")
+            click_button(driver, xpath="//*[@class='tab cash_tab']")
 
             # "Spring over" button
             click_button(driver, class_name="button.link")

@@ -30,11 +30,16 @@ def navigate_to_page(page_name, driver, new_tab=False):
 
     if page_name in pages:
         if new_tab:
+            old_window_handles = driver.window_handles
             driver.execute_script(f"window.open('{pages[page_name]}')")
+            WebDriverWait(driver, 10).until(EC.number_of_windows_to_be(len(old_window_handles)+1))
+            new_window_handles = [x for x in driver.window_handles if x not in old_window_handles]
         else:
             driver.get(pages[page_name])
-        # wait for page to load, up to ten seconds
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
+            new_window_handles = [driver.current_window_handle]
+        assert_current_page_is(page_name, driver, retryCount = 3)
+        assert len(new_window_handles) == 1
+        return new_window_handles[0]
     else:
         raise PageNotImplementedError(page_name, pages)
 
@@ -46,39 +51,56 @@ def navigate_to_link(link, driver):
     # wait for page to load, up to ten seconds
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//html")))
 
-def assert_current_page_is(page_name, driver, retry=0):
-    """ Assert that current url is as given.
+def waitUntil(retryCount, condition, error):
+    """ Evaluates the function passed in condition and returns without throwing an error if true.
+    Else retries with a second of delay for at most retryCount many times.
+    If none of the retries leads to a positive evaluation of the condition, the passed error is thrown.
 
-    Option arguments:
-        retry -- specifies how often to retry, with one second of delay between retries
+    Arguments:
+        retryCount -- specifies how many times to retry, with one second of delay between retries
+        condition -- a function returning True or False to be evaluated. True will cause waitUntil to return
+        error -- an exception to be thrown if all retries lead to False evaluations of condition
+    """
+    for i in range(retryCount):
+        if condition():
+            return
+        time.sleep(1)
+
+    if not condition():
+        raise error
+    
+
+def assert_current_page_is(page_name, driver, retryCount=0):
+    """ Assert that current url matches the string given in page_name exactly.
+
+    Optional arguments:
+        retryCount -- specifies how many times to retry, with one second of delay between retries
     """
     if page_name not in pages:
         raise PageNotImplementedError(page_name, pages)
 
-    target_url = pages[page_name]
-    assert 0 <= retry
-    for i in range(retry):
-        if driver.current_url == target_url:
-            return
-        time.sleep(1)
+    def current_page_is_correct():
+        return driver.current_url == pages[page_name]
 
-    if driver.current_url != target_url:
-        raise EndedUpOnWrongPageError(f"The current url {driver.current_url} does not match the expected url of page {page_name} which is {pages[page_name]}")
+    waitUntil(retryCount, \
+            current_page_is_correct, \
+            UnexpectedPageError(f"The current url {driver.current_url} does not match the expected url of page {page_name}")
+            )
 
-def assert_text_on_page(text, driver, retry=0):
-    """ Assert that given text shows up on page.
+def assert_text_on_page(text, driver, retryCount=0):
+    """ Assert that the given text shows up on the current page.
 
-    Option arguments:
-        retry -- specifies how often to retry, with one second of delay between retries
+    Optional arguments:
+        retryCount -- specifies how many times to retry, with one second of delay between retries
     """
-    assert 0 <= retry
-    for i in range(retry):
-        if text in driver.page_source:
-            return
-        time.sleep(1)
 
-    if text not in driver.page_source:
-        raise TextNotFoundOnPageError(f"Text {text} was not found on current page {driver.current_url}")
+    def text_is_on_page():
+        return text in driver.page_source
+
+    waitUntil(retryCount, \
+            text_is_on_page, \
+            TextNotFoundOnPageError(f"Text {text} was not found on current page {driver.current_url}")
+            )
 
 def find_form_field(driver, form_id=None, class_name=None):
     """Returns a field in the first form that appears on the current page.
@@ -90,7 +112,7 @@ def find_form_field(driver, form_id=None, class_name=None):
         form_id -- the id of the form input to fill
         class_name -- a CSS class of the form input to fill. If multiple form fields share the same class, then the first field that has the class is used.
 
-    It is compulsory to specify precisely one of id and className, otherwise the function will raise an InvalidArgumentsError"""
+    It is compulsory to specify precisely one of id and class_name, otherwise the function will raise an InvalidArgumentsError"""
     if (form_id is None and class_name is None) or (form_id is not None and class_name is not None):
         raise InvalidArgumentError("Precisely one of form_id and class_name has to be specified.")
     elif (form_id != None):
@@ -125,9 +147,9 @@ def get_form_field_value(driver, form_id=None, class_name=None):
 
     Named arguments:
         form_id -- the id of the form input whose value to return
-        className -- a CSS class of the form input whose value to return. If multiple form fields share the same class, then the first field that has the class is used.
+        class_name -- a CSS class of the form input whose value to return. If multiple form fields share the same class, then the first field that has the class is used.
 
-    It is compulsory to specify precisely one of form_id and className, otherwise the function will raise an InvalidArgumentsError"""
+    It is compulsory to specify precisely one of form_id, class_name, otherwise the function will raise an InvalidArgumentsError"""
     field = find_form_field(driver, form_id=form_id, class_name = class_name)
     return field.get_attribute("value")
 
@@ -142,7 +164,7 @@ def find_button(driver, button_id=None, class_name=None, xpath=None):
         class_name -- a CSS class of the button to be returned. If multiple form fields share the same class, then the first field that has the class is used.
         xpath -- XPath of the element to be returned.
 
-    It is compulsory to specify at most one of button_id and class_name, otherwise the function will raise an InvalidArgumentError.
+    No more than one of button_id, class_name, and xpath may be specified, otherwise the function will raise an InvalidArgumentError.
     If none was specified, the first element whose class contains 'button' is returned."""
     if len([x for x in [button_id, class_name, xpath] if x is not None]) > 1:
         raise InvalidArgumentError("At most one of button_id, class_name, or xpath may be specified.")
@@ -162,8 +184,8 @@ def find_button(driver, button_id=None, class_name=None, xpath=None):
     return button
 
 def click_button(driver, button_id=None, class_name=None, xpath=None):
-    """Locates and clicks a button on the current page by id of class name.
-    Raises TimeoutException, if unable to find an element as specified."""
+    """Locates and clicks a button on the current page by id, class name, or xpath.
+    Raises TimeoutException if unable to find an element as specified."""
     button = find_button(driver, button_id=button_id, class_name=class_name, xpath=xpath)
     button.click()
 
@@ -216,7 +238,7 @@ def wait_for_next_page(driver):
 
 
 def try_login(driver, username, password):
-    """ Tries to log in with given credentials. """
+    """ Tries to log in with the given credentials. If this fails, no error is thrown and the function returns."""
     navigate_to_page("login", driver)
 
     fill_form_field(username, driver, "input_username")
@@ -226,9 +248,9 @@ def try_login(driver, username, password):
     wait_for_next_page(driver)
 
 def login(driver, username, password):
-    """ Like try_login but throws error if the user could not be logged in regularly."""
+    """ Tries to log in with the given credentials. If this fails, an InvalidUserError is thrown."""
     try_login(driver, username, password)
     try:
         assert_current_page_is("min_side", driver)
-    except EndedUpOnWrongPageError:
+    except UnexpectedPageError:
         raise InvalidUserError(f"Could not log in with username {username} and password {password} and reach 'Min Side'. Make sure the user exists and is activated.")
