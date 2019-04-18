@@ -78,8 +78,8 @@ def test_unverifiedUserFirstLoginDuplicatePasswordTab(driver, unverified_user_vi
 
 
 #Test specification number 4
-def test_unverifiedUserWithPasswordFirstLogin(driver, unverified_user_via_website):
-    user = unverified_user_via_medlemshjaelp
+def test_unverifiedUserWithPasswordFirstLogin(driver, unverified_user_via_webform):
+    user = unverified_user_via_webform
 
     navigate_to_page("login", driver)
     try_login(driver, user["email"], user["password"])
