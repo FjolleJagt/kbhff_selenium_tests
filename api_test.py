@@ -66,34 +66,35 @@ class Test_Navigation:
 
     def test_canNavigateToLogin(self, driver):
         navigate_to_page("login", driver)
-        assert_text_on_page("Velkommen indenfor", driver, retry=3)
+        assert_text_on_page("Velkommen indenfor", driver, retryCount=3)
 
 class Test_AssertionsAboutCurrentPage:
     def test_assertTextRetriesIfNeeded(self, mock_driver_for_retries):
         mock_driver = mock_driver_for_retries
         with pytest.raises(TextNotFoundOnPageError):
-            assert_text_on_page("call number 5.", mock_driver, retry=3)
+            assert_text_on_page("call number 5.", mock_driver, retryCount=3)
         assert "call number 5." in mock_driver.page_source
 
     def test_assertTextDoesNotRetryIfUnnecessary(self, mock_driver_for_retries):
         mock_driver = mock_driver_for_retries
-        assert_text_on_page("call number 1.", mock_driver, retry=5)
+        assert_text_on_page("call number 1.", mock_driver, retryCount=5)
         assert "call number 2." in mock_driver.page_source
 
     def test_assertCurrentPageRetriesIfNeeded(self, mock_driver_for_retries):
         mock_driver = mock_driver_for_retries
         global pages
-        pages["call 5"] = "This is current_url call number 5."
-        with pytest.raises(EndedUpOnWrongPageError):
-            assert_current_page_is("call 5", mock_driver, retry=3)
+        pages["call 6"] = "This is current_url call number 6."
+        with pytest.raises(UnexpectedPageError):
+            assert_current_page_is("call 6", mock_driver, retryCount=3)
         assert "call number 6." in mock_driver.current_url #account for one more call in error message
 
     def test_assertCurrentPageDoesNotRetryIfUnnecessary(self, mock_driver_for_retries):
         mock_driver = mock_driver_for_retries
         global pages
-        pages["call 1"] = "This is current_url call number 1."
-        assert_current_page_is("call 1", mock_driver, retry=5)
-        assert "call number 2." in mock_driver.current_url
+        pages["call 2"] = "This is current_url call number 2."
+        # account for one additional call when creating error message
+        assert_current_page_is("call 2", mock_driver, retryCount=5)
+        assert "call number 3." in mock_driver.current_url
 
 def test_canFillAndReadFormField(driver):
     navigate_to_page("login", driver)
