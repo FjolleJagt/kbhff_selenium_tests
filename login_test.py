@@ -26,17 +26,13 @@ def test_unverifiedUserFirstLogin(driver, unverified_user_via_medlemshjaelp):
 def test_unverifiedUserFirstLoginDuplicateTab(driver, unverified_user_via_medlemshjaelp):
     user = unverified_user_via_medlemshjaelp
 
-    navigate_to_page("login", driver)
-    first_tab = driver.current_window_handle
-
-    navigate_to_page("login", driver, new_tab=True)
-    WebDriverWait(driver, 10).until(EC.number_of_windows_to_be(2))
-    second_tab = [x for x in driver.window_handles if x != first_tab][0]
+    first_tab = navigate_to_page("login", driver)
+    second_tab = navigate_to_page("login", driver, new_tab=True)
 
     driver.switch_to.window(first_tab)
     try_login(driver, user["email"], user["password"])
     assert_current_page_is("bekraeft_konto", driver)
-    mail = get_latest_mail_to(user["email"], expect_title="Aktiver din konto hos KBHFF", retry=5)
+    mail = get_latest_mail_to(user["email"], expect_title="Aktiver din konto hos KBHFF", retryCount=5)
     token = get_activation_code_from_email(mail.body)
 
     driver.switch_to.window(second_tab)
