@@ -3,16 +3,16 @@ from mail_credentials import *
 from custom_exceptions import *
 import time
 
-def get_latest_mail_to(to_address, expect_title=None, retry=0):
+def get_latest_mail_to(to_address, expect_title=None, retryCount=0):
     """ Receive latest email sent to to_address.
 
     Optional parameters:
         expect_title --- if set, emails with titles that aren't an exact match will be ignored
-        retry --- retry this many times with a second of delay each
+        retry --- retry this many times with a second's delay each
     """
-    assert retry >= 0
+    assert retryCount >= 0
 
-    for i in range(0,1+retry):
+    for i in range(0,1+retryCount):
         gmail = easyimap.connect('imap.gmail.com', mail_credentials["login"], \
                 mail_credentials["password"])
         for mail_id in gmail.listids():
@@ -40,9 +40,3 @@ def get_activation_code_from_email(email_body):
     if len(code_matches) != 1:
         raise UnexpectedLayoutError(f"Could not find a unique activation code in the following mail body:\n {email_body}")
     return code_matches[0]
-
-def get_password_reset_code_from_email(email_body):
-    """ Parses body of the email sending a password reset code and returns the code as string. """
-    import re
-    print(email_body)
-    return "mock code"
