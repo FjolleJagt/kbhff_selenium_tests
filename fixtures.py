@@ -9,7 +9,7 @@ from pyvirtualdisplay import Display
 
 @pytest.fixture(scope="function", params = [webdriver.Firefox, webdriver.Chrome] )
 def driver(request):
-    display = Display(visible=1, size=(1920,1080))
+    display = Display(visible=0, size=(1920,1080))
     display.start()
     driver = (request.param)()
     yield driver # separates setup from teardown

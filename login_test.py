@@ -14,7 +14,7 @@ def test_unverifiedUserFirstLogin(driver, unverified_user_via_medlemshjaelp):
     try_login(driver, user["email"], user["password"])
     assert_current_page_is("bekraeft_konto", driver)
 
-    mail = get_latest_mail_to(user["email"], expect_title="Aktiver din konto hos KBHFF", retry=5)
+    mail = get_latest_mail_to(user["email"], expect_title="Aktiver din konto hos KBHFF", retryCount=5)
     token = get_activation_code_from_email(mail.body)
     fill_form_field(token, driver, form_id="input_verification_code")
     submit_form(driver)
