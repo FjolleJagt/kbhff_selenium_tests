@@ -16,6 +16,9 @@ pages["signup"] = pages["root"] + "bliv-medlem"
 pages["min_side"] = pages["root"] + "profil"
 pages["medlemshjaelp"] = pages["root"] + "medlemshjaelp"
 pages["medlemshjaelp-signup"] = pages["medlemshjaelp"] + "/tilmelding"
+pages["bekraeft_konto"] = pages["login"] + "/bekraeft-konto"
+pages["opret_password"] = pages["login"] + "/opret-password"
+pages["kvittering"] = pages["signup"] + "/bekraeft/kvittering"
 
 def navigate_to_page(page_name, driver):
     """Navigate to the specified page.
