@@ -1,8 +1,8 @@
 import pytest
-from fixtures import *
+from KBHFF.test.fixtures import *
 
-from navigation import *
-from webpage_patterns import *
+from KBHFF.api.navigation import *
+from KBHFF.api.webpage_patterns import *
 
 import time
 

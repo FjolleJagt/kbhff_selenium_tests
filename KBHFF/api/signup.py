@@ -1,5 +1,5 @@
-from navigation import *
-from check_email import *
+from KBHFF.api.navigation import *
+from KBHFF.api.email import *
 
 dummy_card = {}
 dummy_card["number"] = "4242 4242 4242 4242"
