@@ -92,8 +92,7 @@ def signup_via_medlemshjaelp(vagt_user_data, signup_data, payment="mobilepay"):
 
     This method uses its own selenium driver, so doesn't disturb the flow of the enclosing test"""
     with webdriver.Firefox() as driver:
-        try_login(driver, vagt_user_data["email"], vagt_user_data["password"])
-        assert_current_page_is("min_side", driver)
+        login(driver, vagt_user_data["email"], vagt_user_data["password"])
         navigate_to_page("medlemshjaelp-signup", driver)
         assert_current_page_is("medlemshjaelp-signup", driver)
         
