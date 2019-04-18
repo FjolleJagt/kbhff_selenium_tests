@@ -28,10 +28,3 @@ def get_activation_code_from_email(email_body):
 
     assert len(code_matches) == 1
     return code_matches[0]
-
-if __name__ == "__main__":
-    mail = get_latest_mail_to("cb.open.automail@gmail.com")
-    print(mail.title)
-
-
-

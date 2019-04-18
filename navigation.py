@@ -130,7 +130,7 @@ def fill_form_field(value, driver, form_id=None, class_name=None):
     entry_field = find_form_field(driver, form_id=form_id, class_name = class_name)
     entry_field.send_keys(value)
 
-def get_form_field_value(driver, form_id=None, className=None):
+def get_form_field_value(driver, form_id=None, class_name=None):
     """Return the current value of a field in the first form that appears on the current page.
 
     Positional arguments:
@@ -142,7 +142,7 @@ def get_form_field_value(driver, form_id=None, className=None):
 
     It is compulsory to specify precisely one of form_id and className, otherwise the function will raise an InvalidArgumentsError"""
     field = find_form_field(driver, form_id=form_id, class_name = class_name)
-    return field.getAttribute("value")
+    return field.get_attribute("value")
 
 def find_button(driver, button_id=None, class_name=None, xpath=None):
     """Returns the first matching button on the current page.
@@ -155,7 +155,7 @@ def find_button(driver, button_id=None, class_name=None, xpath=None):
         class_name -- a CSS class of the button to be returned. If multiple form fields share the same class, then the first field that has the class is used.
         xpath -- XPath of the element to be returned.
 
-    It is compulsory to specify at most one of button_id, class_name, and xpath, otherwise the function will raise an InvalidArgumentsError.
+    It is compulsory to specify at most one of button_id and class_name, otherwise the function will raise an InvalidArgumentError.
     If none was specified, the first element whose class contains 'button' is returned."""
     if len([x for x in [button_id, class_name, xpath] if x is not None]) > 1:
         raise InvalidArgumentError("At most one of button_id, class_name, or xpath may be specified.")
@@ -245,40 +245,3 @@ def login(driver, username, password):
         assert_current_page_is("min_side", driver)
     except UnexpectedPageError:
         raise InvalidUserError(f"Could not log in with username {username} and password {password} and reach 'Min Side'. Make sure the user exists and is activated.")
-
-def request_password_reset(driver, user_email):
-    driver.get(pages["login"])
-
-    forgot_password_link = driver.find_element_by_xpath("//p[@class='forgot']/a")
-    forgot_password_link.click()
-
-    WebDriverWait(driver, 10).until(EC.url_changes(pages["login"]))
-
-    email_entry = driver.find_element_by_id("input_username")
-    email_entry.send_keys(user_email)
-    email_entry.submit()
-
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_reset-token")))
-
-    # wait for token to be written to database
-    time.sleep(0.5) 
-
-def enter_password_request_token(driver, reset_token):
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_reset-token")))
-
-    reset_token_entry = driver.find_element_by_id("input_reset-token")
-    reset_token_entry.send_keys(reset_token)
-    reset_token_entry.submit()
-
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_new_password")))
-
-def enter_new_password_for_reset(driver, new_password):
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_new_password")))
-    password_entry = driver.find_element_by_id("input_new_password")
-    password_entry.send_keys(new_password)
-
-    password_confirm = driver.find_element_by_id("input_confirm_password")
-    password_confirm.send_keys(new_password)
-    password_confirm.submit()
-
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "input_username")))
