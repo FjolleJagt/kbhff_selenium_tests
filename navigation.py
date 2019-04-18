@@ -103,7 +103,7 @@ def find_form_field(driver, form_id=None, class_name=None):
         form_id -- the id of the form input to fill
         class_name -- a CSS class of the form input to fill. If multiple form fields share the same class, then the first field that has the class is used.
 
-    It is compulsory to specify precisely one of id and className, otherwise the function will raise an InvalidArgumentsError"""
+    It is compulsory to specify precisely one of id and class_name, otherwise the function will raise an InvalidArgumentsError"""
     if (form_id is None and class_name is None) or (form_id is not None and class_name is not None):
         raise InvalidArgumentError("Precisely one of form_id and class_name has to be specified.")
     elif (form_id != None):
@@ -138,9 +138,9 @@ def get_form_field_value(driver, form_id=None, class_name=None):
 
     Named arguments:
         form_id -- the id of the form input whose value to return
-        className -- a CSS class of the form input whose value to return. If multiple form fields share the same class, then the first field that has the class is used.
+        class_name -- a CSS class of the form input whose value to return. If multiple form fields share the same class, then the first field that has the class is used.
 
-    It is compulsory to specify precisely one of form_id and className, otherwise the function will raise an InvalidArgumentsError"""
+    It is compulsory to specify precisely one of form_id, class_name, otherwise the function will raise an InvalidArgumentsError"""
     field = find_form_field(driver, form_id=form_id, class_name = class_name)
     return field.get_attribute("value")
 
@@ -155,7 +155,7 @@ def find_button(driver, button_id=None, class_name=None, xpath=None):
         class_name -- a CSS class of the button to be returned. If multiple form fields share the same class, then the first field that has the class is used.
         xpath -- XPath of the element to be returned.
 
-    It is compulsory to specify at most one of button_id and class_name, otherwise the function will raise an InvalidArgumentError.
+    No more than one of button_id, class_name, and xpath may be specified, otherwise the function will raise an InvalidArgumentError.
     If none was specified, the first element whose class contains 'button' is returned."""
     if len([x for x in [button_id, class_name, xpath] if x is not None]) > 1:
         raise InvalidArgumentError("At most one of button_id, class_name, or xpath may be specified.")
@@ -175,8 +175,8 @@ def find_button(driver, button_id=None, class_name=None, xpath=None):
     return button
 
 def click_button(driver, button_id=None, class_name=None, xpath=None):
-    """Locates and clicks a button on the current page by id of class name.
-    Raises TimeoutException, if unable to find an element as specified."""
+    """Locates and clicks a button on the current page by id, class name, or xpath.
+    Raises TimeoutException if unable to find an element as specified."""
     button = find_button(driver, button_id=button_id, class_name=class_name, xpath=xpath)
     button.click()
 

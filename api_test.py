@@ -119,5 +119,5 @@ class Test_FindButtons:
 
     def test_findButtonFindsLoginButtonByXpath(self, driver):
         navigate_to_page("login", driver)
-        button = find_button(driver, xpath="/html/body/div/div[3]/div/form/ul/li/input")
+        button = find_button(driver, xpath="//*[@value='Log ind']")
         assert button is not None
