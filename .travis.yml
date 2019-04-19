@@ -1,4 +1,7 @@
 language: python
+addons:
+  chrome: stable
+  firefox: latest
 python:
   - "3.6"
 # install dependencies
