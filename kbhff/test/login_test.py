@@ -75,3 +75,12 @@ def test_unverifiedUserFirstLoginDuplicatePasswordTab(driver, unverified_user_vi
     assert_current_page_is("login", driver)
     assert_username_prefilled(user["email"], driver)
     assert_text_on_page("Din konto har allerede en adgangskode!", driver)
+
+
+#Test specification number 4
+def test_unverifiedUserWithPasswordFirstLogin(driver, unverified_user_via_webform):
+    user = unverified_user_via_webform
+
+    navigate_to_page("login", driver)
+    try_login(driver, user["email"], user["password"])
+    assert_current_page_is("bekraeft_konto", driver)
