@@ -1,7 +1,7 @@
 import pytest
-from KBHFF.test.fixtures import *
+from kbhff.test.fixtures import *
 
-from KBHFF.api.navigation import *
+from kbhff.api.navigation import *
 
 @pytest.fixture(scope="function")
 def mock_driver():

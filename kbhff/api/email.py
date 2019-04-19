@@ -1,6 +1,6 @@
 import easyimap, email
-from mail_credentials import *
-from custom_exceptions import *
+from kbhff.api.mail_credentials import *
+from kbhff.api.exceptions import *
 import time
 
 def get_latest_mail_to(to_address, expect_title=None, retryCount=0):
