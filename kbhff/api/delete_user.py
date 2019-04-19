@@ -26,4 +26,4 @@ def delete_user(user_data):
         click_button(driver, xpath="//form[@class='confirm_cancellation']/descendant::input[contains(@class, 'button')]") # "Farvel" button
         
         assert_current_page_is("login", driver, retryCount=10)
-        assert_text_on_page("Dine oplysninger blev slettet", driver)
+        assert_text_on_page("Dine oplysninger blev slettet", driver, retryCount=10)
