@@ -1,4 +1,4 @@
-from KBHFF.api.navigation import *
+from kbhff.api.navigation import *
 
 def delete_user(user_data):
     """Deletes the given user by logging in and following the deletion flow.
