@@ -7,6 +7,15 @@ from kbhff.api.delete_user import *
 
 from pyvirtualdisplay import Display
 
+@pytest.fixture(scope="module")
+def gmail():
+    print("Connecting to GMail")
+    gmail = get_gmail_connection()
+    print("Connected to GMail")
+    yield gmail
+    gmail.quit()
+    print("Closed connection to GMail")
+
 @pytest.fixture(scope="function", params = [webdriver.Firefox, webdriver.Chrome] )
 def driver(request):
     display = Display(visible=0, size=(1920,1080))

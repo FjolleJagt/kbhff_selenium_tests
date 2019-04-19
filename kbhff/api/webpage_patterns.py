@@ -1,8 +1,8 @@
 from kbhff.api.navigation import *
 from kbhff.api.email import *
 
-def get_verification_token_on_first_login(user_email):
-    mail = get_latest_mail_to(user_email, expect_title="Aktiver din konto hos KBHFF", retryCount=5)
+def get_verification_token_on_first_login(user_email, email_connection=None):
+    mail = get_latest_mail_to(user_email, email_connection=email_connection, expect_title="Aktiver din konto hos KBHFF", retryCount=5)
     return get_activation_code_from_email(mail.body)
 
 def input_verification_token(token, driver):
@@ -10,8 +10,8 @@ def input_verification_token(token, driver):
     fill_form_field(token, driver, form_id="input_verification_code")
     submit_form(driver)
 
-def verify_account_on_first_login(user_email, driver):
-    token = get_verification_token_on_first_login(user_email)
+def verify_account_on_first_login(user_email, driver, email_connection=None):
+    token = get_verification_token_on_first_login(user_email, email_connection)
     input_verification_token(token, driver)
 
 def create_password(new_password, driver):

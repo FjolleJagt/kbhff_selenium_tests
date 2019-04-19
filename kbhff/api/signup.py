@@ -14,7 +14,7 @@ def random_string(n):
 def random_user_data():
     import random
     user_data = {}
-    general_email = mail_credentials["login"].split("@")
+    general_email = get_mail_credentials()["login"].split("@")
     user_data["email"] = general_email[0] + "+" + random_string(10) + "@" + general_email[1]
     user_data["firstname"] = random_string(10)
     user_data["lastname"] = random_string(10)
