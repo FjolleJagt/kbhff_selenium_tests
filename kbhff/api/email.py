@@ -30,23 +30,28 @@ def get_latest_mail_to(to_address, email_connection = None, expect_title = None,
         expect_title --- if set, emails with titles that aren't an exact match will be ignored
         retry --- retry this many times with a second's delay each
     """
-    assert retryCount >= 0
 
     connection_is_temporary = (email_connection is None)
     if connection_is_temporary:
         email_connection = get_gmail_connection()
 
-    for i in range(0,1+retryCount):
-        for mail in email_connection.listup(25):
-            if mail.to == to_address and (expect_title in [mail.title, None]):
-                if connection_is_temporary:
-                    email_connection.quit()
-                return mail
+    def mail_match(mail):
+        return mail.to == to_address and (expect_title in [mail.title, None])
+
+    matches = list(filter(mail_match, email_connection.listup(25))) 
+    for i in range(0,retryCount):
+        matches = list(filter(mail_match, email_connection.listup(25))) 
+        if len(matches) > 0:
+            break
         time.sleep(1)
 
     if connection_is_temporary:
         email_connection.quit()
-    raise NoEmailReceivedError(f"Found no Email to {to_address}.")
+
+    if len(matches) > 0:
+        return matches[0]
+    else:
+        raise NoEmailReceivedError(f"Found no matching Email to {to_address}.")
 
 def get_activation_code_from_email(email_body):
     """ Parses body of the email sending an activation code and returns the code as string. """
