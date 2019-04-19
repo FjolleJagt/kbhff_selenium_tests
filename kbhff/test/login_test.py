@@ -84,3 +84,9 @@ def test_unverifiedUserWithPasswordFirstLogin(driver, unverified_user_via_webfor
     navigate_to_page("login", driver)
     try_login(driver, user["email"], user["password"])
     assert_current_page_is("bekraeft_konto", driver)
+    token = get_verification_token_on_first_login(user["email"])
+    input_verification_token(token, driver)
+    assert_current_page_is("login", driver)
+    assert_username_prefilled(user["email"], driver)
+    assert_text_on_page("Din konto er nu aktiveret og du kan logge ind", driver)
+
