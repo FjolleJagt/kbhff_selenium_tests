@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException
 
-from custom_exceptions import *
+from kbhff.api.exceptions import *
 
 pages = {}
 pages["root"] = "http://kbhff.local/"

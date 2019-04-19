@@ -1,9 +1,9 @@
 import pytest
 
-from navigation import *
-from signup import *
-from dummy_user_data import user_data as permanent_user
-from delete_user import *
+from kbhff.api.navigation import *
+from kbhff.api.signup import *
+from kbhff.api.dummy_user_data import user_data as permanent_user
+from kbhff.api.delete_user import *
 
 from pyvirtualdisplay import Display
 

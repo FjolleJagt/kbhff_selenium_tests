@@ -1,5 +1,5 @@
-from navigation import *
-from check_email import *
+from kbhff.api.navigation import *
+from kbhff.api.email import *
 
 def get_verification_token_on_first_login(user_email):
     mail = get_latest_mail_to(user_email, expect_title="Aktiver din konto hos KBHFF", retryCount=5)

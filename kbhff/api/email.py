@@ -1,7 +1,19 @@
 import easyimap, email
-from mail_credentials import *
-from custom_exceptions import *
+from kbhff.api.exceptions import *
 import time
+
+# Try to get mail credentials
+try:
+    # check if module exists:
+    from kbhff.api.mail_credentials import *
+except ModuleNotFoundError:
+    # check if environment variables exist:
+    from os import environ
+    mail_credentials = {}
+    mail_credentials["login"] = environ.get("MAIL_CREDENTIALS_EMAIL")
+    mail_credentials["password"] = environ.get("MAIL_CREDENTIALS_PASSWORD")
+
+    
 
 def get_latest_mail_to(to_address, expect_title=None, retryCount=0):
     """ Receive latest email sent to to_address.
