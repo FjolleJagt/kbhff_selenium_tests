@@ -90,3 +90,15 @@ def test_unverifiedUserWithPasswordFirstLogin(driver, gmail, unverified_user_via
     assert_username_prefilled(user["email"], driver)
     assert_text_on_page("Din konto er nu aktiveret og du kan logge ind", driver)
 
+#Test specification number 5
+def test_unverifiedUserWithPasswordFirstLoginIncorrectCode(driver, unverified_user_via_webform):
+    user = unverified_user_via_webform
+
+    navigate_to_page("login", driver)
+    try_login(driver, user["email"], user["password"])
+    assert_current_page_is("bekraeft_konto", driver)
+    wrong_token = "111aaaaa"
+    input_verification_token(wrong_token, driver)
+    assert_current_page_is("login", driver)
+    assert_username_not_prefilled("", driver)
+    assert_text_on_page("Beklager, det lykkedes ikke at aktivere", driver)
