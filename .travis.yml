@@ -19,4 +19,4 @@ install:
   - pip install -r requirements.txt
 # run tests
 script:
-  - pytest -k "test_canNavigateToLogin"
+  - pytest
