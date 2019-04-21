@@ -2,7 +2,7 @@ from kbhff.api.navigation import *
 from kbhff.api.email import *
 
 def get_verification_token_on_first_login(user_email, email_connection=None):
-    mail = get_latest_mail_to(user_email, email_connection=email_connection, expect_title="Aktiver din konto hos KBHFF", retryCount=5)
+    mail = get_latest_mail_to(user_email, email_connection=email_connection, expect_title="Aktiver din konto hos KBHFF", retryCount=25)
     return get_activation_code_from_email(mail.body)
 
 def input_verification_token(token, driver):
@@ -24,4 +24,6 @@ def assert_username_prefilled(username, driver):
     assert_current_page_is("login", driver)
     assert get_form_field_value(driver, form_id="input_username") == username
 
-
+def assert_username_not_prefilled(username, driver):
+    assert_current_page_is("login", driver)
+    assert get_form_field_value(driver, form_id="input_username") != username
