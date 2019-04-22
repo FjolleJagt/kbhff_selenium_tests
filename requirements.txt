@@ -4,7 +4,6 @@ chardet==3.0.4
 coverage==4.5.3
 easyimap==0.6.3
 EasyProcess==0.2.5
-kbhff==0.0.0
 more-itertools==7.0.0
 pluggy==0.9.0
 py==1.8.0
@@ -12,4 +11,4 @@ pytest==4.4.0
 PyVirtualDisplay==0.2.1
 selenium==3.141.0
 six==1.12.0
-urllib3==1.24.1
+urllib3==1.24.2

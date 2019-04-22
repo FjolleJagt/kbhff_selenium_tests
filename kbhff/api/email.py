@@ -10,9 +10,9 @@ def get_mail_credentials():
         # check if environment variables exist:
         from os import environ
         mail_credentials = {}
-        # values will be None if environment variable doesn't exist
-        mail_credentials["login"] = environ.get("MAIL_CREDENTIALS_EMAIL")
-        mail_credentials["password"] = environ.get("MAIL_CREDENTIALS_PASSWORD")
+        # Throws error, if environment variable does not exist
+        mail_credentials["login"] = environ["MAIL_CREDENTIALS_EMAIL"]
+        mail_credentials["password"] = environ["MAIL_CREDENTIALS_PASSWORD"]
     return mail_credentials
     
     
@@ -29,6 +29,7 @@ def get_latest_mail_to(to_address, email_connection = None, expect_title = None,
     Optional parameters:
         expect_title --- if set, emails with titles that aren't an exact match will be ignored
         retry --- retry this many times with a second's delay each
+        email_connection --- if an easyimap imapper with an existing connection is passed, this will be used to look up emails. Otherwise, a default connection as passed by get_gmail_connection is established and used.
     """
 
     connection_is_temporary = (email_connection is None)
@@ -36,14 +37,14 @@ def get_latest_mail_to(to_address, email_connection = None, expect_title = None,
         email_connection = get_gmail_connection()
 
     def mail_match(mail):
-        return mail.to == to_address and (expect_title in [mail.title, None])
+        return mail.to == to_address and (expect_title == mail.title or expect_title is None)
 
     matches = list(filter(mail_match, email_connection.listup(25))) 
     for i in range(0,retry_count):
-        matches = list(filter(mail_match, email_connection.listup(25))) 
         if len(matches) > 0:
             break
         time.sleep(1)
+        matches = list(filter(mail_match, email_connection.listup(25))) 
 
     if connection_is_temporary:
         email_connection.quit()
