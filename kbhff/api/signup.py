@@ -45,10 +45,10 @@ def _signup_step_betaling(driver):
         submit_form(driver)
         
         wait_for_next_page(driver)
-        assert_text_on_page("er godkendt", driver, retryCount=10)
+        assert_text_on_page("er godkendt", driver, retry_count=10)
 
 def _signup_step_verification(email, driver):
-        mail = get_latest_mail_to(email)
+        mail = get_latest_mail_to(email, retry_count=15)
         activation_code = get_activation_code_from_email(mail.body)
         fill_form_field(activation_code, driver, form_id="input_verification_code")
         submit_form(driver)
