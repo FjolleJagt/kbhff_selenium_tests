@@ -153,3 +153,13 @@ def test_validLogin(driver, verified_user):
 
     assert_current_page_is("min_side", driver)
 
+#Test specification number 12
+def test_nonuserLogin(driver):
+    user = random_user_data()
+
+    try_login(driver, user["email"], user["password"])
+
+    assert_current_page_is("login", driver)
+    assert_username_not_prefilled(driver)
+    assert_text_on_page("Det indtastede brugernavn findes ikke i vores system.", driver)
+
