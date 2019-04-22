@@ -8,11 +8,11 @@ import time
 
 
 # Test specification number 1
-def test_unverifiedUserFirstLogin(driver, unverified_user_via_medlemshjaelp):
+def test_unverifiedUserFirstLogin(driver, gmail, unverified_user_via_medlemshjaelp):
     user = unverified_user_via_medlemshjaelp
 
     try_login(driver, user["email"], user["password"])
-    verify_account_on_first_login(user["email"], driver)
+    verify_account_on_first_login(user["email"], driver, email_connection=gmail)
     create_password(user["password"], driver)
 
     assert_current_page_is("kvittering", driver)
@@ -22,7 +22,7 @@ def test_unverifiedUserFirstLogin(driver, unverified_user_via_medlemshjaelp):
 
 
 # Test specification number 2
-def test_unverifiedUserFirstLoginDuplicateVerificationTab(driver, unverified_user_via_medlemshjaelp):
+def test_unverifiedUserFirstLoginDuplicateVerificationTab(driver, gmail, unverified_user_via_medlemshjaelp):
     user = unverified_user_via_medlemshjaelp
 
     first_tab = navigate_to_page("login", driver)
@@ -31,7 +31,7 @@ def test_unverifiedUserFirstLoginDuplicateVerificationTab(driver, unverified_use
     driver.switch_to.window(first_tab)
     try_login(driver, user["email"], user["password"])
     assert_current_page_is("bekraeft_konto", driver)
-    token = get_verification_token_on_first_login(user["email"])
+    token = get_verification_token_on_first_login(user["email"], email_connection=gmail)
 
     driver.switch_to.window(second_tab)
     navigate_to_page("bekraeft_konto", driver)
@@ -49,7 +49,7 @@ def test_unverifiedUserFirstLoginDuplicateVerificationTab(driver, unverified_use
 
 
 # Test specification number 3
-def test_unverifiedUserFirstLoginDuplicatePasswordTab(driver, unverified_user_via_medlemshjaelp):
+def test_unverifiedUserFirstLoginDuplicatePasswordTab(driver, gmail, unverified_user_via_medlemshjaelp):
     user = unverified_user_via_medlemshjaelp
 
     first_tab = navigate_to_page("login", driver)
@@ -58,7 +58,7 @@ def test_unverifiedUserFirstLoginDuplicatePasswordTab(driver, unverified_user_vi
     driver.switch_to.window(first_tab)
     try_login(driver, user["email"], user["password"])
     assert_current_page_is("bekraeft_konto", driver)
-    token = get_verification_token_on_first_login(user["email"])
+    token = get_verification_token_on_first_login(user["email"], email_connection=gmail)
     input_verification_token(token, driver)
     assert_current_page_is("opret_password", driver)
 
@@ -78,15 +78,27 @@ def test_unverifiedUserFirstLoginDuplicatePasswordTab(driver, unverified_user_vi
 
 
 #Test specification number 4
-def test_unverifiedUserWithPasswordFirstLogin(driver, unverified_user_via_webform):
+def test_unverifiedUserWithPasswordFirstLogin(driver, gmail, unverified_user_via_webform):
     user = unverified_user_via_webform
 
     navigate_to_page("login", driver)
     try_login(driver, user["email"], user["password"])
     assert_current_page_is("bekraeft_konto", driver)
-    token = get_verification_token_on_first_login(user["email"])
+    token = get_verification_token_on_first_login(user["email"], email_connection=gmail)
     input_verification_token(token, driver)
     assert_current_page_is("login", driver)
     assert_username_prefilled(user["email"], driver)
     assert_text_on_page("Din konto er nu aktiveret og du kan logge ind", driver)
 
+#Test specification number 5
+def test_unverifiedUserWithPasswordFirstLoginIncorrectCode(driver, unverified_user_via_webform):
+    user = unverified_user_via_webform
+
+    navigate_to_page("login", driver)
+    try_login(driver, user["email"], user["password"])
+    assert_current_page_is("bekraeft_konto", driver)
+    wrong_token = "111aaaaa"
+    input_verification_token(wrong_token, driver)
+    assert_current_page_is("login", driver)
+    assert_username_not_prefilled("", driver)
+    assert_text_on_page("Beklager, det lykkedes ikke at aktivere", driver)

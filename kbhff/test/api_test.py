@@ -113,11 +113,14 @@ class Test_FindButtons:
         button = find_button(driver, xpath="//*[@value='Log ind']")
         assert button is not None
 
-def test_haveMaillCredentials():
+def test_haveMailCredentials():
+    mail_credentials = get_mail_credentials()
     assert "login" in mail_credentials
+    assert mail_credentials["login"] is not None
     assert "password" in mail_credentials
+    assert mail_credentials["password"] is not None
 
 def test_canLogIntoGmail():
     # raises imaplib.error if e.g. authentication fails
-    easyimap.connect('imap.gmail.com', mail_credentials["login"], \
-            mail_credentials["password"])
+    gmail = get_gmail_connection()
+    gmail.quit()

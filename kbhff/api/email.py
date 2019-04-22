@@ -2,38 +2,57 @@ import easyimap, email
 from kbhff.api.exceptions import *
 import time
 
-# Try to get mail credentials
-try:
-    # check if module exists:
-    from kbhff.api.mail_credentials import *
-except ModuleNotFoundError:
-    # check if environment variables exist:
-    from os import environ
-    mail_credentials = {}
-    mail_credentials["login"] = environ.get("MAIL_CREDENTIALS_EMAIL")
-    mail_credentials["password"] = environ.get("MAIL_CREDENTIALS_PASSWORD")
-
+def get_mail_credentials():
+    try:
+        # check if module exists:
+        from kbhff.api.mail_credentials import mail_credentials
+    except ModuleNotFoundError:
+        # check if environment variables exist:
+        from os import environ
+        mail_credentials = {}
+        # Throws error, if environment variable does not exist
+        mail_credentials["login"] = environ["MAIL_CREDENTIALS_EMAIL"]
+        mail_credentials["password"] = environ["MAIL_CREDENTIALS_PASSWORD"]
+    return mail_credentials
     
+    
+def get_gmail_connection(address = None, password = None):
+    if address is None:
+        address = get_mail_credentials()["login"]
+    if password is None:
+        password = get_mail_credentials()["password"]
+    return easyimap.connect ('imap.gmail.com', address, password)
 
-def get_latest_mail_to(to_address, expect_title=None, retryCount=0):
+def get_latest_mail_to(to_address, email_connection = None, expect_title = None, retryCount = 0):
     """ Receive latest email sent to to_address.
 
     Optional parameters:
         expect_title --- if set, emails with titles that aren't an exact match will be ignored
         retry --- retry this many times with a second's delay each
+        email_connection --- if an easyimap imapper with an existing connection is passed, this will be used to look up emails. Otherwise, a default connection as passed by get_gmail_connection is established and used.
     """
-    assert retryCount >= 0
 
-    for i in range(0,1+retryCount):
-        gmail = easyimap.connect('imap.gmail.com', mail_credentials["login"], \
-                mail_credentials["password"])
-        for mail_id in gmail.listids():
-            mail = gmail.mail(mail_id)
-            if mail.to == to_address and (expect_title in [mail.title, None]):
-                return mail
+    connection_is_temporary = (email_connection is None)
+    if connection_is_temporary:
+        email_connection = get_gmail_connection()
+
+    def mail_match(mail):
+        return mail.to == to_address and (expect_title == mail.title or expect_title is None)
+
+    matches = list(filter(mail_match, email_connection.listup(25))) 
+    for i in range(0,retryCount):
+        if len(matches) > 0:
+            break
         time.sleep(1)
+        matches = list(filter(mail_match, email_connection.listup(25))) 
 
-    raise NoEmailReceivedError(f"Found no Email to {to_address}.")
+    if connection_is_temporary:
+        email_connection.quit()
+
+    if len(matches) > 0:
+        return matches[0]
+    else:
+        raise NoEmailReceivedError(f"Found no matching Email to {to_address}.")
 
 def get_activation_code_from_email(email_body):
     """ Parses body of the email sending an activation code and returns the code as string. """
