@@ -23,7 +23,7 @@ def get_gmail_connection(address = None, password = None):
         password = get_mail_credentials()["password"]
     return easyimap.connect ('imap.gmail.com', address, password)
 
-def get_latest_mail_to(to_address, email_connection = None, expect_title = None, retry_count = 0):
+def get_latest_mail_to(to_address, email_connection = None, expect_title = None, retry_count = 10):
     """ Receive latest email sent to to_address.
 
     Optional parameters:
