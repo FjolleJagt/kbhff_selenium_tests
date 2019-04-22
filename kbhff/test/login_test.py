@@ -100,5 +100,5 @@ def test_unverifiedUserWithPasswordFirstLoginIncorrectCode(driver, unverified_us
     wrong_token = "111aaaaa"
     input_verification_token(wrong_token, driver)
     assert_current_page_is("login", driver)
-    assert_username_not_prefilled("", driver)
+    assert_username_not_prefilled(driver)
     assert_text_on_page("Beklager, det lykkedes ikke at aktivere", driver)
