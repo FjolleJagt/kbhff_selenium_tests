@@ -36,3 +36,9 @@ def unverified_user_via_webform():
     yield user_data
     delete_user(user_data)
 
+@pytest.fixture(scope="function")
+def verified_user():
+    user_data = random_user_data()
+    signup_via_webform(user_data)
+    yield user_data
+    delete_user(user_data)
