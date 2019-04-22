@@ -24,6 +24,6 @@ def assert_username_prefilled(username, driver):
     assert_current_page_is("login", driver)
     assert get_form_field_value(driver, form_id="input_username") == username
 
-def assert_username_not_prefilled(username, driver):
+def assert_username_not_prefilled(driver):
     assert_current_page_is("login", driver)
-    assert get_form_field_value(driver, form_id="input_username") != username
+    assert get_form_field_value(driver, form_id="input_username") == "Brugernavn"
