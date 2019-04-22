@@ -1,7 +1,7 @@
 import pytest
-from fixtures import *
+from kbhff.test.fixtures import *
 
-from navigation import *
+from kbhff.api.navigation import *
 
 @pytest.fixture(scope="function")
 def mock_driver():
@@ -112,3 +112,15 @@ class Test_FindButtons:
         navigate_to_page("login", driver)
         button = find_button(driver, xpath="//*[@value='Log ind']")
         assert button is not None
+
+def test_haveMailCredentials():
+    mail_credentials = get_mail_credentials()
+    assert "login" in mail_credentials
+    assert mail_credentials["login"] is not None
+    assert "password" in mail_credentials
+    assert mail_credentials["password"] is not None
+
+def test_canLogIntoGmail():
+    # raises imaplib.error if e.g. authentication fails
+    gmail = get_gmail_connection()
+    gmail.quit()

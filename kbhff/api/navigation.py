@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException
 
-from custom_exceptions import *
+from kbhff.api.exceptions import *
 
 pages = {}
 pages["root"] = "http://kbhff.local/"
@@ -137,6 +137,7 @@ def fill_form_field(value, driver, form_id=None, class_name=None):
 
     It is compulsory to specify precisely one of form_id and class_name, otherwise the function will raise an InvalidArgumentsError"""
     entry_field = find_form_field(driver, form_id=form_id, class_name = class_name)
+    entry_field.clear()
     entry_field.send_keys(value)
 
 def get_form_field_value(driver, form_id=None, class_name=None):

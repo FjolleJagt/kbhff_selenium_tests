@@ -1,0 +1,20 @@
+language: python
+addons:
+  chrome: stable
+  firefox: latest
+python:
+  - "3.6"
+# install dependencies
+before_install:
+  - wget https://github.com/mozilla/geckodriver/releases/download/v0.24.0/geckodriver-v0.24.0-linux64.tar.gz
+  - wget https://chromedriver.storage.googleapis.com/73.0.3683.68/chromedriver_linux64.zip
+  - mkdir geckodriver chromedriver
+  - tar -xzf geckodriver-v0.24.0-linux64.tar.gz -C geckodriver
+  - unzip chromedriver_linux64.zip -d chromedriver
+  - export PATH=$PATH:$PWD/geckodriver:$PWD/chromedriver
+install:
+  - pip install .
+  - pip install -r requirements.txt
+# run tests
+script:
+  - pytest

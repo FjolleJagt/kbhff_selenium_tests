@@ -1,11 +1,17 @@
 import pytest
 
-from navigation import *
-from signup import *
-from dummy_user_data import user_data as permanent_user
-from delete_user import *
+from kbhff.api.navigation import *
+from kbhff.api.signup import *
+from kbhff.api.dummy_user_data import user_data as permanent_user
+from kbhff.api.delete_user import *
 
 from pyvirtualdisplay import Display
+
+@pytest.fixture(scope="module")
+def gmail():
+    gmail = get_gmail_connection()
+    yield gmail
+    gmail.quit()
 
 @pytest.fixture(scope="function", params = [webdriver.Firefox, webdriver.Chrome] )
 def driver(request):
@@ -23,4 +29,10 @@ def unverified_user_via_medlemshjaelp():
     yield user_data
     delete_user(user_data)
 
+@pytest.fixture(scope="function")
+def unverified_user_via_webform():
+    user_data = random_user_data()
+    signup_via_webform(user_data, activate_right_away=False)
+    yield user_data
+    delete_user(user_data)
 
