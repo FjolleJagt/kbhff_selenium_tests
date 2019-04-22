@@ -90,6 +90,7 @@ def test_unverifiedUserWithPasswordFirstLogin(driver, gmail, unverified_user_via
     assert_username_prefilled(user["email"], driver)
     assert_text_on_page("Din konto er nu aktiveret og du kan logge ind", driver)
 
+
 #Test specification number 5
 def test_unverifiedUserWithPasswordFirstLoginIncorrectCode(driver, unverified_user_via_webform):
     user = unverified_user_via_webform
@@ -102,3 +103,29 @@ def test_unverifiedUserWithPasswordFirstLoginIncorrectCode(driver, unverified_us
     assert_current_page_is("login", driver)
     assert_username_not_prefilled(driver)
     assert_text_on_page("Beklager, det lykkedes ikke at aktivere", driver)
+
+
+#Test specification number 6
+def test_unverifiedUserWithPasswordFirstLoginDuplicateVerificationTab(driver, gmail, unverified_user_via_webform):
+    user = unverified_user_via_webform
+
+    first_tab = navigate_to_page("login", driver)
+    second_tab = navigate_to_page("login", driver, new_tab=True)
+
+    driver.switch_to.window(first_tab)
+    try_login(driver, user["email"], user["password"])
+    assert_current_page_is("bekraeft_konto", driver)
+    token = get_verification_token_on_first_login(user["email"], email_connection=gmail)
+
+    driver.switch_to.window(second_tab)
+    navigate_to_page("bekraeft_konto", driver)
+    input_verification_token(token, driver)
+    assert_current_page_is("login", driver)
+    assert_username_prefilled(user["email"], driver)
+    assert_text_on_page("Din konto er nu aktiveret og du kan logge ind", driver)
+
+    driver.switch_to.window(first_tab)
+    input_verification_token(token, driver)
+    assert_current_page_is("login", driver)
+    assert_username_prefilled(user["email"], driver)
+    assert_text_on_page("Din konto er allerede aktiveret!", driver)
