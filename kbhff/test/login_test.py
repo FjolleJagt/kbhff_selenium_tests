@@ -129,3 +129,19 @@ def test_unverifiedUserWithPasswordFirstLoginDuplicateVerificationTab(driver, gm
     assert_current_page_is("login", driver)
     assert_username_prefilled(user["email"], driver)
     assert_text_on_page("Din konto er allerede aktiveret!", driver)
+
+#Test specification number 7 is a duplicate of number 5
+
+#Test specifications number 8 and 9 require access to old CodeIgniter users
+
+#Test specification number 10
+def test_wrongPasswordLogin(driver, verified_user):
+    user = verified_user
+
+    wrong_password = "wrong" + user["password"]
+    try_login(driver, user["email"], wrong_password)
+
+    assert_current_page_is("login", driver)
+    assert_username_prefilled(user["email"], driver)
+    assert_text_on_page("Ugyldig adgangskode", driver)
+    
